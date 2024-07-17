@@ -1,4 +1,4 @@
-function [skeletonized_img, binarized_img] = Skeletonization(image, median_filter_size, frangi_opts, VISUALIZE)
+function [skeletonized_img, binarized_img] = Skeletonization(image, median_filter_size, frangi_opts, VISUALIZE, save_path)
 % ---------------------------------------------------------------------------
 % Description:
 %    This function segments & skeletonizes the blood vessel network of the
@@ -40,11 +40,23 @@ skeletonized_img = bwmorph(binarized_img, 'skel', Inf);
 if VISUALIZE
     % Display the processed image at the different steps
     F1 = figure(1);
-    subplot(2,3,1); imshow(image); title('Original image');
-    subplot(2,3,2); imshow(image_median./255); title('2. Image after median filtering');
-    subplot(2,3,3); imshow(image_frangi); title('3. Image after frangi filtering');
-    subplot(2,3,4); imshow(binarized_img); title('4. Image after fuzzy thresholding');
-    subplot(2,3,5); imshow(skeletonized_img); title('5. Image after skeletonization');
+    subplot(1,4,1); imshow(image_median./255); title('1. Median filtering');
+    subplot(1,4,2); imshow(image_frangi); title('2. Frangi filtering');
+    subplot(1,4,3); imshow(binarized_img); title('3. Fuzzy thresholding');
+    subplot(1,4,4); imshow(skeletonized_img); title('4. Skeletonization');
     F1.WindowState = 'maximized';
+
+    % Set PaperPositionMode to auto
+    set(F1, 'PaperPositionMode', 'auto');
+    
+    % Define the save path and filename
+    save_path2 = strcat(save_path(1:end-4), "_skeletonized.png");
+    
+    % Save the figure without the white border
+    print(F1, save_path2, '-dpng', '-r0', '-painters');
+
+    %save_path2 = save_path(1:end-4) + "_skeletonized.png";
+    %saveas(gcf, save_path2);
+    close(F1);
 end
 end

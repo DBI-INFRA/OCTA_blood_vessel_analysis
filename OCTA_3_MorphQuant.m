@@ -32,7 +32,7 @@ frangi_opts.sigmarange = [1 6];
 frangi_opts.sigmastepsize = 2;
 frangi_opts.correctionconst1 = 0.8;
 frangi_opts.correctionconst2 = 15;
-VISUALIZE = false;
+save_skeleton = true;
 
 % Parameter for the depth range around the estimated SPD (for mean intensity projection)
 SPD_range = 30;
@@ -46,6 +46,11 @@ meanDiameter  = zeros(num_images, 1);
 meanLength    = zeros(num_images, 1);
 meanDensity   = zeros(num_images, 1);
 fracDimension = zeros(num_images, 1);
+
+skeleton_result_path = [result_path '\3_MIP_skeletonization_results'];
+if save_skeleton
+    mkdir(skeleton_result_path);
+end
 
 % ================= Quantify all images in folder =========================
 fprintf("\nProcessing %d images:\n", num_images);
@@ -69,7 +74,8 @@ for ff = 1:length(fileList)
         StackMIP = StackMIP * 255;
     end
     StackMIP = double(int16(squeeze(StackMIP)));
-    [skeleton, binary_img] = Skeletonization(StackMIP, median_filter_size, frangi_opts, VISUALIZE);
+    save_path = [skeleton_result_path '\' fileList(ff).name];
+    [skeleton, binary_img] = Skeletonization(StackMIP, median_filter_size, frangi_opts, save_skeleton, save_path);
 
     % 2) Quantify the blood vessel network morphology
     % Average Vessel Diameter in um

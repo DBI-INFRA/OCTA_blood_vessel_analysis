@@ -103,7 +103,7 @@ depth = size(image, 3);
 num_segments_array = zeros(1, depth);
 for z = 1:depth
     depth_slice = image(:, :, z);
-    [skeletonized_slice, ~] = Skeletonization(depth_slice, median_filter_size, frangi_opts, VISUALIZE);
+    [skeletonized_slice, ~] = Skeletonization(depth_slice, median_filter_size, frangi_opts, VISUALIZE, "none");
 
     % Find connected segments & count the number of independent segments
     segments = bwconncomp(skeletonized_slice);
