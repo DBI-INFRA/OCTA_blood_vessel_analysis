@@ -46,16 +46,9 @@ if VISUALIZE
     subplot(1,4,4); imshow(skeletonized_img); title('4. Skeletonization');
     F1.WindowState = 'maximized';
 
-    % Set PaperPositionMode to auto
+    save_path2 = save_path(1:end-4) + "_skeletonized.png";
     set(F1, 'PaperPositionMode', 'auto');
-    
-    % Define the save path and filename
-    save_path2 = strcat(save_path(1:end-4), "_skeletonized.png");
-    
-    % Save the figure without the white border
     print(F1, save_path2, '-dpng', '-r0', '-painters');
-
-    %save_path2 = save_path(1:end-4) + "_skeletonized.png";
     %saveas(gcf, save_path2);
     close(F1);
 end
