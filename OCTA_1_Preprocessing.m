@@ -35,18 +35,20 @@ AutoCrop = false;
 gamma = 10; order = 4; wname = 'db20'; reps = 2; orient = 'both'; dim = 3;
 
 %% ================= Parse input and preallocate storage ==================
-filelist  = dir([input_dir '\*.tif*']);
+
+filelist  = dir(fullfile(input_dir, '*.tif*'));
+
 fileslice = ones(length(filelist), 2);
 fileinfo  = cell(length(filelist), 3);
 
 timenow = char(datetime("now"), "yyMMdd_HHmmss");
-output_dir  = [result_dir '\' timenow '\'];
-imwrite_dir = [output_dir '1_AlignedImages\'];
+output_dir  = fullfile(result_dir, timenow);
+imwrite_dir = fullfile(output_dir, '1_AlignedImages');
 mkdir(imwrite_dir);
 
 %% ================= Preprocess all images in input folder ================
 for ff = 1:length(filelist)
-    img_path = [input_dir '\' filelist(ff).name]
+    img_path = fullfile(input_dir, filelist(ff).name);
     img_info = imfinfo(img_path);
     fileinfo(ff,:) = {img_info(1).XResolution, img_info(1).YResolution, ... 
                       img_info(1).ResolutionUnit};
@@ -72,17 +74,17 @@ for ff = 1:length(filelist)
 
     % 2) Write Results to file
     % Write aligned image
-    imwrite(AlignedStack(:,:,1), [imwrite_dir filelist(ff).name]);
+    imwrite(AlignedStack(:,:,1), fullfile(imwrite_dir, filelist(ff).name));
     for ii = 2:size(AlignedStack, 3)
-         imwrite(AlignedStack(:,:,ii), [imwrite_dir filelist(ff).name], "Writemode", "append");
+         imwrite(AlignedStack(:,:,ii), fullfile(imwrite_dir, filelist(ff).name), "Writemode", "append");
     end
     
     % Write zdisplacement
     if writeZDisplacement
-        if ~exist([imwrite_dir 'Displacement\'], "file")
-            mkdir([imwrite_dir 'Displacement\'])
+        if ~exist(fullfile(imwrite_dir, 'Displacement'), "file")
+            mkdir(fullfile(imwrite_dir, 'Displacement'));
         end
-        imwrite(double(z_shift)/255, [imwrite_dir 'Displacement\' filelist(ff).name]);
+        imwrite(double(z_shift)/255, fullfile(imwrite_dir, 'Displacement', filelist(ff).name));
     end
 
 end
@@ -92,5 +94,5 @@ T = horzcat(cell2table(fileinfo), array2table(fileslice));
 T.Properties.RowNames = {filelist.name};
 T.Properties.VariableNames = {'XRes', 'YRes', 'ResUnit', ...
                                'First Slice', 'Last Slice'};
-writetable(T, [output_dir 'ImageSummary.csv'], 'WriteRowNames', true);
+writetable(T, fullfile(output_dir, 'ImageSummary.csv'), 'WriteRowNames', true);
 fprintf("\nOCTA Script 1: Preprocessing & Skin-Border Alignment DONE\n");
