@@ -36,7 +36,7 @@ addpath('helper_scripts');
 
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images & result directory
-result_path = 'N:\SUN-BMI-DBI-DATA-NOBACKUP\NinaMK\Results\240717_152517';
+result_path = '/Users/px/Documents/GitHub/OCTA_blood_vessel_analysis/NinaMK_Results/240718_100149';
 
 % Parameters for skeletonization (median-filter & Frangi-filter)
 median_filter_size = 5;
@@ -52,12 +52,12 @@ fprintf("\nIMAGE FOLDER PATH: \n  <%s>\n", result_path);
 fprintf('\nSELECTED PARAMETERS:\n  Median filter size: %d \n  Frangi filter: sigma range: [%d, %d], sigma stepsize: %d, correctionconst1: %.2f, correctionconst 2: %d\n\n', median_filter_size, frangi_opts.sigmarange(1), frangi_opts.sigmarange(2), frangi_opts.sigmastepsize, frangi_opts.correctionconst1, frangi_opts.correctionconst2);
 
 % Create new folder for the results of CLD- & SPD-depth computation
-CLD_SPD_result_path = result_path + "/2_CLD_SPD_estimation";
+CLD_SPD_result_path = fullfile(result_path, '2_CLD_SPD_estimation');
 mkdir(CLD_SPD_result_path);
 
 % Parse input directory
-fileList = dir([result_path '\1_AlignedImages\*.tif*']);
-imgInfo = readtable([result_path '\ImageSummary.csv'], 'ReadRowNames', true);
+fileList = dir(fullfile(result_path, '1_AlignedImages', '*.tif*'));
+imgInfo = readtable(fullfile(result_path, 'ImageSummary.csv'), 'ReadRowNames', true);
 
 % ================= Compute the CLD- & SPD-depth for all images ===========
 % Inizialize empty arrays to store the CLD-depth and SPD-depth per image
@@ -67,7 +67,7 @@ SPD_depths = zeros(height(imgInfo), 1);
 % Iterate over the image folder & compute the CLD- & SPD-depth for each image
 fprintf("ESTIMATE THE CLD-DEPTH & SPD-DEPTH:\n")
 for ff = 1:length(fileList)
-    image_path = [fileList(ff).folder '\' fileList(ff).name];
+    image_path = fullfile(fileList(ff).folder, fileList(ff).name);
     [CLD_depth, SPD_depth] = CLD_SPD_Estimation(image_path, median_filter_size, frangi_opts, VISUALIZE, CLD_SPD_result_path, fileList(ff).name);
     CLD_depths(ff) = CLD_depth;
     SPD_depths(ff) = SPD_depth;
@@ -160,7 +160,9 @@ text(CLD_depth, smoothed_array(CLD_depth), sprintf('  CLD depth: %d', CLD_depth)
 plot(SPD_depth, smoothed_array(SPD_depth), 'ro', 'MarkerSize', 10);
 text(SPD_depth, smoothed_array(SPD_depth), sprintf('  SPD depth: %d', SPD_depth), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
 hold off;
-saveas(gcf, CLD_SPD_result_path + '/' + img_name + '_Independent_segments_per_depth_graph.png');
+
+[~, fileName, ~] = fileparts(img_name);
+
 close
 
 % Save independent segments per depth array (original & smoothed) to a csv-file.
@@ -168,7 +170,7 @@ close
 CLD_info_col = zeros(length(num_segments_array), 1); CLD_info_col(1) = CLD_depth;
 SPD_info_col = zeros(length(num_segments_array), 1); SPD_info_col(1) = SPD_depth;
 data_table = table((1:depth)', num_segments_array', smoothed_array', CLD_info_col, SPD_info_col, 'VariableNames', {'Depth', 'num_segments', 'smoothed_num_segments', 'CLD_depth', 'SPD_depth'});
-file_path = CLD_SPD_result_path + '/' + img_name + '_Independent_segments_per_depth_data.csv';
+file_path = fullfile(CLD_SPD_result_path, strcat(fileName, '_Independent_segments_per_depth_data.csv'));
 writetable(data_table, file_path);
 %fprintf("\nNumber of segments per depth data saved to <%s>\n", file_path);
 end

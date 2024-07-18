@@ -24,7 +24,9 @@ addpath('helper_scripts');
 
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images
-result_path = 'N:\SUN-BMI-DBI-DATA-NOBACKUP\NinaMK\Results\240717_152517';
+% result_path = 'N:\SUN-BMI-DBI-DATA-NOBACKUP\NinaMK\Results\240717_152517';
+
+result_path = '/Users/px/Documents/GitHub/OCTA_blood_vessel_analysis/NinaMK_Results/240718_100149';
 
 % Parameters for skeletonization (median-filter & Frangi-filter)
 median_filter_size = 5;
@@ -38,8 +40,8 @@ save_skeleton = true;
 SPD_range = 30;
 
 % ================= Parse input and preallocate storage ===================
-fileList  = dir([result_path '\1_AlignedImages\*.tif*']);
-imgInfo  = readtable([result_path '\ImageSummary.csv'], 'ReadRowNames',true);
+fileList  = dir(fullfile(result_path, "1_AlignedImages", "*.tif*"));
+imgInfo  = readtable(fullfile(result_path, 'ImageSummary.csv'), 'ReadRowNames',true);
 
 num_images = length(fileList);
 meanDiameter  = zeros(num_images, 1);
@@ -47,8 +49,9 @@ meanLength    = zeros(num_images, 1);
 meanDensity   = zeros(num_images, 1);
 fracDimension = zeros(num_images, 1);
 
-skeleton_result_path = [result_path '\3_MIP_skeletonization_results'];
-if save_skeleton
+skeleton_result_path = fullfile(result_path, '3_MIP_skeletonization_results');
+
+if save_skeleton && ~isfolder(skeleton_result_path)
     mkdir(skeleton_result_path);
 end
 
@@ -57,7 +60,7 @@ fprintf("\nProcessing %d images:\n", num_images);
 for ff = 1:length(fileList)
     
     % 1) Parse image information
-    img_path   = [fileList(ff).folder '\' fileList(ff).name];
+    img_path   = fullfile(fileList(ff).folder, fileList(ff).name);
 
     % Resolution stored as pixels per centimeters in Tiff metadata 
     % Convert into um/pixel (1cm = 10e4 um)

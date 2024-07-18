@@ -1,0 +1,6 @@
+
+# Allow .m files
+!*.m
+
+# Allow README file (case insensitive)
+!README.md
