@@ -24,7 +24,9 @@ addpath('helper_scripts');
 input_dir = 'sample_data';
 
 % Result directory & optional result
-result_dir = 'N:\SUN-BMI-DBI-DATA-NOBACKUP\NinaMK\Results';
+% result_dir = 'N:\SUN-BMI-DBI-DATA-NOBACKUP\NinaMK\Results';
+result_dir = 'NinaMK_Results';
+
 % Optional results to write
 writeZDisplacement = true;
 

@@ -36,7 +36,7 @@ addpath('helper_scripts');
 
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images & result directory
-result_path = '/Users/px/Documents/GitHub/OCTA_blood_vessel_analysis/N:\SUN-BMI-DBI-DATA-NOBACKUP\NinaMK\Results/240717_214756';
+result_path = '/Users/px/Documents/GitHub/OCTA_blood_vessel_analysis/NinaMK_Results/240718_100149';
 
 % Parameters for skeletonization (median-filter & Frangi-filter)
 median_filter_size = 5;
@@ -160,7 +160,9 @@ text(CLD_depth, smoothed_array(CLD_depth), sprintf('  CLD depth: %d', CLD_depth)
 plot(SPD_depth, smoothed_array(SPD_depth), 'ro', 'MarkerSize', 10);
 text(SPD_depth, smoothed_array(SPD_depth), sprintf('  SPD depth: %d', SPD_depth), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
 hold off;
-saveas(gcf, fullfile(CLD_SPD_result_path, strcat(img_name, '_Independent_segments_per_depth_graph.png')));
+
+[~, fileName, ~] = fileparts(img_name);
+
 close
 
 % Save independent segments per depth array (original & smoothed) to a csv-file.
@@ -168,7 +170,7 @@ close
 CLD_info_col = zeros(length(num_segments_array), 1); CLD_info_col(1) = CLD_depth;
 SPD_info_col = zeros(length(num_segments_array), 1); SPD_info_col(1) = SPD_depth;
 data_table = table((1:depth)', num_segments_array', smoothed_array', CLD_info_col, SPD_info_col, 'VariableNames', {'Depth', 'num_segments', 'smoothed_num_segments', 'CLD_depth', 'SPD_depth'});
-file_path = fullfile(CLD_SPD_result_path, strcat(img_name, '_Independent_segments_per_depth_data.csv'));
+file_path = fullfile(CLD_SPD_result_path, strcat(fileName, '_Independent_segments_per_depth_data.csv'));
 writetable(data_table, file_path);
 %fprintf("\nNumber of segments per depth data saved to <%s>\n", file_path);
 end
