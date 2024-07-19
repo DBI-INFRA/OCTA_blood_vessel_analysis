@@ -44,6 +44,7 @@ frangi_opts.sigmarange = [1 6];
 frangi_opts.sigmastepsize = 2;
 frangi_opts.correctionconst1 = 0.8;
 frangi_opts.correctionconst2 = 15;
+thresholding_method = "fuzzy_thresholding";  % OPTIONS: "fuzzy_thresholding", "local_adaptive_thresholding"
 VISUALIZE = false;
 
 % ================= Print parameters & parse input ========================
@@ -68,7 +69,7 @@ SPD_depths = zeros(height(imgInfo), 1);
 fprintf("ESTIMATE THE CLD-DEPTH & SPD-DEPTH:\n")
 for ff = 1:length(fileList)
     image_path = fullfile(fileList(ff).folder, fileList(ff).name);
-    [CLD_depth, SPD_depth] = CLD_SPD_Estimation(image_path, median_filter_size, frangi_opts, VISUALIZE, CLD_SPD_result_path, fileList(ff).name);
+    [CLD_depth, SPD_depth] = CLD_SPD_Estimation(image_path, median_filter_size, frangi_opts, thresholding_method, VISUALIZE, CLD_SPD_result_path, fileList(ff).name);
     CLD_depths(ff) = CLD_depth;
     SPD_depths(ff) = SPD_depth;
     fprintf("  Image: <%s>:  CLD_depth = %d,  SPD_depth = %d\n", fileList(ff).name, CLD_depth, SPD_depth);
@@ -86,7 +87,7 @@ fprintf("\nOCTA Script 2: Estimation of CLD-depth & SPD-depth DONE\n");
 
 % ================= Function for CLD- & SPD-depth estimation ==============
 %% CLD-depth & SPD-depth Estimation
-function [CLD_depth, SPD_depth] = CLD_SPD_Estimation(image_path, median_filter_size, frangi_opts, VISUALIZE, CLD_SPD_result_path, img_name)
+function [CLD_depth, SPD_depth] = CLD_SPD_Estimation(image_path, median_filter_size, frangi_opts, thresholding_method, VISUALIZE, CLD_SPD_result_path, img_name)
 
 % Load the selected image
 image = tiffreadVolume(image_path);
@@ -103,7 +104,7 @@ depth = size(image, 3);
 num_segments_array = zeros(1, depth);
 for z = 1:depth
     depth_slice = image(:, :, z);
-    [skeletonized_slice, ~] = Skeletonization(depth_slice, median_filter_size, frangi_opts, VISUALIZE, "none");
+    [skeletonized_slice, ~] = Skeletonization(depth_slice, median_filter_size, frangi_opts, thresholding_method, VISUALIZE, "none");
 
     % Find connected segments & count the number of independent segments
     segments = bwconncomp(skeletonized_slice);

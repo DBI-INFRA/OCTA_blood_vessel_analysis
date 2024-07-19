@@ -1,4 +1,4 @@
-function [skeletonized_img, binarized_img] = Skeletonization(image, median_filter_size, frangi_opts, VISUALIZE, save_path)
+function [skeletonized_img, binarized_img] = Skeletonization(image, median_filter_size, frangi_opts, thresholding_method, VISUALIZE, save_path)
 % ---------------------------------------------------------------------------
 % Description:
 %    This function segments & skeletonizes the blood vessel network of the
@@ -31,10 +31,18 @@ image_median = medfilt2(image,[median_filter_size median_filter_size]);
 image_frangi = frangi_2Dfilter(image_median, frangi_opts);
 
 % 2) SEGMENTATION & SKELETONIZATION
-% Apply fuzzy thresholding to binarize & segment the image
-binarized_img = fuzzy_thresholding(image_frangi, 2, 3) - 1; % nth = 2 clusters
-
-
+switch thresholding_method
+    case 'fuzzy_thresholding'
+        % Apply fuzzy thresholding to binarize & segment the image
+        binarized_img = fuzzy_thresholding(image_frangi, 2, 3) - 1; % nth = 2 clusters
+    case 'local_adaptive_thresholding'
+        disp('LOCAL ADAPTIVE THRESHOLDING IS NOT YET IMPLEMENTED');
+    otherwise
+        disp(['The selected thresholding method does not exist. ' ...
+            'Please select one from the following: {fuzzy_thresdholding, ' ...
+            'local adaptive thresholding}']);
+        disp("Use default method <Fuzzy thresholding> instead");
+end
 
 % Skeletonize the binary image
 skeletonized_img = bwmorph(binarized_img, 'skel', Inf);

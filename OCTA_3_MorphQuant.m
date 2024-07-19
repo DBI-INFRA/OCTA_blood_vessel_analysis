@@ -32,6 +32,7 @@ frangi_opts.sigmarange = [1 6];
 frangi_opts.sigmastepsize = 2;
 frangi_opts.correctionconst1 = 0.8;
 frangi_opts.correctionconst2 = 15;
+thresholding_method = "fuzzy_thresholding";  % OPTIONS: "fuzzy_thresholding", "local_adaptive_thresholding"
 save_skeleton = true;
 
 % Parameter for the depth range around the estimated SPD (for mean intensity projection)
@@ -76,7 +77,7 @@ for ff = 1:length(fileList)
     end
     StackMIP = double(int16(squeeze(StackMIP)));
     save_path = fullfile(skeleton_result_path, fileList(ff).name);
-    [skeleton, binary_img] = Skeletonization(StackMIP, median_filter_size, frangi_opts, save_skeleton, save_path);
+    [skeleton, binary_img] = Skeletonization(StackMIP, median_filter_size, frangi_opts, thresholding_method, save_skeleton, save_path);
 
     % 2) Quantify the blood vessel network morphology
     % Average Vessel Diameter in um
