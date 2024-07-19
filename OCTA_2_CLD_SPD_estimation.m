@@ -36,7 +36,7 @@ addpath('helper_scripts');
 
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images & result directory
-result_path = '/Users/px/Documents/GitHub/OCTA_blood_vessel_analysis/NinaMK_Results/240719_093205';
+result_path = 'results/240719_141653';
 
 % Parameters for skeletonization (median-filter & Frangi-filter)
 median_filter_size = 5;
@@ -162,7 +162,6 @@ text(SPD_depth, smoothed_array(SPD_depth), sprintf('  SPD depth: %d', SPD_depth)
 hold off;
 
 [~, fileName, ~] = fileparts(img_name);
-
 saveas(gcf, fullfile(CLD_SPD_result_path, strcat(img_name, '_Independent_segments_per_depth_graph.png')));
 
 close

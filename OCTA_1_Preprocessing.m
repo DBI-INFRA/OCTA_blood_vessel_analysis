@@ -21,19 +21,17 @@ addpath('helper_scripts');
 %% ================= User Parameters ======================================
 % Input image directory containing the original OCT images.
 % Note: The image data should be in local drive for fast read/write speed
-% input_dir = 'sample_data';
-
-input_dir = '/Users/px/Downloads/full_sample'
+input_dir = 'sample_data';
 
 % Result directory & optional result
 % result_dir = 'N:\SUN-BMI-DBI-DATA-NOBACKUP\NinaMK\Results';
-result_dir = 'NinaMK_Results';
+result_dir = 'results';
 
 % Optional results to write
 writeZDisplacement = true;
 
 % Automated image cropping
-AutoCrop = true;
+AutoCrop = false; %true;
 
 % Wavelet Transform Parameters
 gamma = 10; order = 4; wname = 'db20'; reps = 2; orient = 'both'; dim = 3;
