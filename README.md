@@ -6,4 +6,8 @@ Fuzzy Logic Toolbox
 
 Curve Fitting Toolbox
 
+Wavelet Toolbox
+
+Deep Learning Toolbox
+
 Packages that are listed in the document also need to specified since other users do not have the document

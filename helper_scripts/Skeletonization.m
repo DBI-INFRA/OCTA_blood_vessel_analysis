@@ -42,9 +42,9 @@ switch thresholding_method
         threshold = graythresh(image_frangi);
         binarized_img = imbinarize(image_frangi, threshold);
     case 'test_all'
-        disp("You selected <test_all>. This will generate a plot for" + ...
+        disp("You selected <test_all>. This will generate a plot for " + ...
             "each available thresholding method, including local adaptive " + ...
-            "thresholding with 3 different options for the sensitivity")
+            "thresholding with 3 different options for the sensitivity (0.2, 0.4, 0.6)")
         binarized_img_fuzzy = fuzzy_thresholding(image_frangi, 2, 3) - 1;
         threshold = graythresh(image_frangi);
         binarized_img_otsu = imbinarize(image_frangi, threshold);
@@ -65,7 +65,7 @@ switch thresholding_method
         subplot(2,3,5); imshow(binarized_img_ad_tr2); title('Adaptive local tr., sensitivity = 0.4');
         subplot(2,3,6); imshow(binarized_img_ad_tr3); title('Adaptive local tr., sensitivity = 0.6');
         Ft.WindowState = 'maximized';
-        save_path2 = save_path(1:end-4) + "_all_threshold_methods.png";
+        save_path2 = save_path(1:end-4) + "_all_thresholding_methods.png";
         set(Ft, 'PaperPositionMode', 'auto');
         print(Ft, save_path2, '-dpng', '-r0', '-painters');
         saveas(gcf, save_path2);
