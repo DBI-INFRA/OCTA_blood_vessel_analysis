@@ -36,7 +36,11 @@ switch thresholding_method
         % Apply fuzzy thresholding to binarize & segment the image
         binarized_img = fuzzy_thresholding(image_frangi, 2, 3) - 1; % nth = 2 clusters
     case 'local_adaptive_thresholding'
-        disp('LOCAL ADAPTIVE THRESHOLDING IS NOT YET IMPLEMENTED');
+        adaptive_threshold = adaptthresh(image_frangi, 0.5); % 2nd parameter is the sensitivity
+        binarized_img = imbinarize(image_frangi, adaptive_threshold);
+    case 'otsu_thresholding'
+        threshold = graythresh(image_frangi);
+        binarized_img = imbinarize(image_frangi, threshold);
     otherwise
         disp(['The selected thresholding method does not exist. ' ...
             'Please select one from the following: {fuzzy_thresdholding, ' ...
@@ -51,19 +55,16 @@ skeletonized_img = bwmorph(binarized_img, 'skel', Inf);
 if VISUALIZE
     % Display the processed image at the different steps
     F1 = figure(1);
-
     subplot(1,4,1); imshow(image_median./255); title('1. Median filtering');
     subplot(1,4,2); imshow(image_frangi); title('2. Frangi filtering');
     subplot(1,4,3); imshow(binarized_img); title('3. Fuzzy thresholding');
     subplot(1,4,4); imshow(skeletonized_img); title('4. Skeletonization');
-
-
     F1.WindowState = 'maximized';
 
-    save_path2 = save_path(1:end-4) + "_skeletonized.png";
+    save_path2 = save_path(1:end-4) + "_skeletonized_" + thresholding_method + ".png";
     set(F1, 'PaperPositionMode', 'auto');
     print(F1, save_path2, '-dpng', '-r0', '-painters');
-    %saveas(gcf, save_path2);
+    saveas(gcf, save_path2);
     close(F1);
 end
 end

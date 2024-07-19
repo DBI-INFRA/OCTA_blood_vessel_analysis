@@ -32,7 +32,7 @@ frangi_opts.sigmarange = [1 6];
 frangi_opts.sigmastepsize = 2;
 frangi_opts.correctionconst1 = 0.8;
 frangi_opts.correctionconst2 = 15;
-thresholding_method = "fuzzy_thresholding";  % OPTIONS: "fuzzy_thresholding", "local_adaptive_thresholding"
+thresholding_method = "local_adaptive_thresholding";  % OPTIONS: "fuzzy_thresholding", "local_adaptive_thresholding" "otsu_thresholding"
 save_skeleton = true;
 
 % Parameter for the depth range around the estimated SPD (for mean intensity projection)
