@@ -1,4 +1,4 @@
-function [skeletonized_img, binarized_img] = Skeletonization(image, median_filter_size, frangi_opts, thresholding_method, VISUALIZE, save_path)
+function [skeletonized_img, binarized_img] = Skeletonization(image, median_filter_size, frangi_opts, thresholding_method, adaptive_tr_sensitivity, VISUALIZE, save_path)
 % ---------------------------------------------------------------------------
 % Description:
 %    This function segments & skeletonizes the blood vessel network of the
@@ -36,16 +36,46 @@ switch thresholding_method
         % Apply fuzzy thresholding to binarize & segment the image
         binarized_img = fuzzy_thresholding(image_frangi, 2, 3) - 1; % nth = 2 clusters
     case 'local_adaptive_thresholding'
-        adaptive_threshold = adaptthresh(image_frangi, 0.5); % 2nd parameter is the sensitivity
+        adaptive_threshold = adaptthresh(image_frangi, adaptive_tr_sensitivity); % 2nd parameter is the sensitivity
         binarized_img = imbinarize(image_frangi, adaptive_threshold);
     case 'otsu_thresholding'
         threshold = graythresh(image_frangi);
         binarized_img = imbinarize(image_frangi, threshold);
+    case 'test_all'
+        disp("You selected <test_all>. This will generate a plot for" + ...
+            "each available thresholding method, including local adaptive " + ...
+            "thresholding with 3 different options for the sensitivity")
+        binarized_img_fuzzy = fuzzy_thresholding(image_frangi, 2, 3) - 1;
+        threshold = graythresh(image_frangi);
+        binarized_img_otsu = imbinarize(image_frangi, threshold);
+        adaptive_tr1 = adaptthresh(image_frangi, 0.2);
+        binarized_img_ad_tr1 = imbinarize(image_frangi, adaptive_tr1);
+        adaptive_tr2 = adaptthresh(image_frangi, 0.4);
+        binarized_img_ad_tr2 = imbinarize(image_frangi, adaptive_tr2);
+        adaptive_tr3 = adaptthresh(image_frangi, 0.6);
+        binarized_img_ad_tr3 = imbinarize(image_frangi, adaptive_tr3);
+        binarized_img = binarized_img_fuzzy; % Use fuzzy tr. as the default
+
+        % Create figure for different thresholding results
+        Ft = figure(1);
+        subplot(2,3,1); imshow(image_median./255); title('Median filtered image');
+        subplot(2,3,2); imshow(binarized_img_fuzzy); title('Fuzzy thresholding');
+        subplot(2,3,3); imshow(binarized_img_otsu); title('Otsu thresholding');
+        subplot(2,3,4); imshow(binarized_img_ad_tr1); title('Adaptive local tr., sensitivity = 0.2');
+        subplot(2,3,5); imshow(binarized_img_ad_tr2); title('Adaptive local tr., sensitivity = 0.4');
+        subplot(2,3,6); imshow(binarized_img_ad_tr3); title('Adaptive local tr., sensitivity = 0.6');
+        Ft.WindowState = 'maximized';
+        save_path2 = save_path(1:end-4) + "_all_threshold_methods.png";
+        set(Ft, 'PaperPositionMode', 'auto');
+        print(Ft, save_path2, '-dpng', '-r0', '-painters');
+        saveas(gcf, save_path2);
+        close(Ft);
     otherwise
         disp(['The selected thresholding method does not exist. ' ...
-            'Please select one from the following: {fuzzy_thresdholding, ' ...
-            'local adaptive thresholding}']);
+            'Please select one from the following: {fuzzy_thresholding, ' ...
+            'local adaptive thresholding, otsu thresholding}']);
         disp("Use default method <Fuzzy thresholding> instead");
+        binarized_img = fuzzy_thresholding(image_frangi, 2, 3) - 1;
 end
 
 % Skeletonize the binary image
@@ -61,7 +91,7 @@ if VISUALIZE
     subplot(1,4,4); imshow(skeletonized_img); title('4. Skeletonization');
     F1.WindowState = 'maximized';
 
-    save_path2 = save_path(1:end-4) + "_skeletonized_" + thresholding_method + ".png";
+    save_path2 = save_path(1:end-4) + "_skeletonized_" + thresholding_method + "_" + adaptive_tr_sensitivity + ".png";
     set(F1, 'PaperPositionMode', 'auto');
     print(F1, save_path2, '-dpng', '-r0', '-painters');
     saveas(gcf, save_path2);

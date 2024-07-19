@@ -32,7 +32,9 @@ frangi_opts.sigmarange = [1 6];
 frangi_opts.sigmastepsize = 2;
 frangi_opts.correctionconst1 = 0.8;
 frangi_opts.correctionconst2 = 15;
-thresholding_method = "local_adaptive_thresholding";  % OPTIONS: "fuzzy_thresholding", "local_adaptive_thresholding" "otsu_thresholding"
+thresholding_method = "test_all";  % OPTIONS: "fuzzy_thresholding", "local_adaptive_thresholding" "otsu_thresholding"
+                                   %    Note: "test_all" will generate a plot with all different thresholding methods
+adaptive_tr_sensitivity = 0.3;     % The sensitivity of the local adaptive thresholding (higher values will pick up more of the vessels but potentially also more noise)
 save_skeleton = true;
 
 % Parameter for the depth range around the estimated SPD (for mean intensity projection)
@@ -77,7 +79,7 @@ for ff = 1:length(fileList)
     end
     StackMIP = double(int16(squeeze(StackMIP)));
     save_path = fullfile(skeleton_result_path, fileList(ff).name);
-    [skeleton, binary_img] = Skeletonization(StackMIP, median_filter_size, frangi_opts, thresholding_method, save_skeleton, save_path);
+    [skeleton, binary_img] = Skeletonization(StackMIP, median_filter_size, frangi_opts, thresholding_method, adaptive_tr_sensitivity, save_skeleton, save_path);
 
     % 2) Quantify the blood vessel network morphology
     % Average Vessel Diameter in um
