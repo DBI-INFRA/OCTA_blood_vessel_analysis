@@ -26,7 +26,7 @@ addpath('helper_scripts');
 % Input image directory containing the cropped OCT images
 % result_path = 'N:\SUN-BMI-DBI-DATA-NOBACKUP\NinaMK\Results\240717_152517';
 
-result_path = '/Users/px/Documents/GitHub/OCTA_blood_vessel_analysis/NinaMK_Results/240718_100149';
+result_path = '/Users/px/Documents/GitHub/OCTA_blood_vessel_analysis/NinaMK_Results/240718_170616';
 
 % Parameters for skeletonization (median-filter & Frangi-filter)
 median_filter_size = 5;
@@ -77,7 +77,7 @@ for ff = 1:length(fileList)
         StackMIP = StackMIP * 255;
     end
     StackMIP = double(int16(squeeze(StackMIP)));
-    save_path = [skeleton_result_path '\' fileList(ff).name];
+    save_path = fullfile(skeleton_result_path, fileList(ff).name);
     [skeleton, binary_img] = Skeletonization(StackMIP, median_filter_size, frangi_opts, save_skeleton, save_path);
 
     % 2) Quantify the blood vessel network morphology
@@ -109,5 +109,5 @@ morphTable.Properties.RowNames = {fileList.name};
 morphTable.Properties.VariableNames ...
     = {'Mean_Diameter (um)', 'Mean_Branch_Length (um)', ...
        'Vessel_Density (vessel/mm2)', 'Fractal_Dimension'};
-writetable(morphTable, [result_path, '\MorphologyResults.csv'], WriteRowNames=true);
+writetable(morphTable, fullfile(result_path, 'MorphologyResults.csv'), WriteRowNames=true);
 fprintf("\nOCTA Script 3: Quantification of Blood Vessel Morphology is DONE\n");

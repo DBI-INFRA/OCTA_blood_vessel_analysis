@@ -34,16 +34,22 @@ image_frangi = frangi_2Dfilter(image_median, frangi_opts);
 % Apply fuzzy thresholding to binarize & segment the image
 binarized_img = fuzzy_thresholding(image_frangi, 2, 3) - 1; % nth = 2 clusters
 
+
+
 % Skeletonize the binary image
 skeletonized_img = bwmorph(binarized_img, 'skel', Inf);
+
 
 if VISUALIZE
     % Display the processed image at the different steps
     F1 = figure(1);
+
     subplot(1,4,1); imshow(image_median./255); title('1. Median filtering');
     subplot(1,4,2); imshow(image_frangi); title('2. Frangi filtering');
     subplot(1,4,3); imshow(binarized_img); title('3. Fuzzy thresholding');
     subplot(1,4,4); imshow(skeletonized_img); title('4. Skeletonization');
+
+
     F1.WindowState = 'maximized';
 
     save_path2 = save_path(1:end-4) + "_skeletonized.png";
