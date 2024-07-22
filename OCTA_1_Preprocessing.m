@@ -53,13 +53,11 @@ imwrite_dir = fullfile(output_dir, '1_AlignedImages');
 mkdir(imwrite_dir);
 
 % Save all user parameters in a table
-params_path = fullfile(output_dir, 'InputParameters');
-user_params = struct("PixelX_um", pixel_size(1), "PixelY_um", pixel_size(2), ...
-                     "PixelZ_um", pixel_size(3), "AutoCrop", AutoCrop, ...
-                     "WT_gamma", gamma, "WT_order", order, "WT_wname", wname, ...
+params_path = fullfile(output_dir, 'InputParameters.mat');
+preprocess_opts = struct("AutoCrop", AutoCrop, "WT_gamma", gamma, ...
+                     "WT_order", order, "WT_wname", wname, ...
                      "WT_reps", reps, "WT_orient", orient, "WT_dim", dim);
-save([params_path '.mat'], "user_params");
-writecell([fieldnames(user_params), struct2cell(user_params)], [params_path, '.csv']);
+save(params_path, "pixel_size", "preprocess_opts");
 
 %% ================= Preprocess all images in input folder ================
 for ff = 1:length(filelist)

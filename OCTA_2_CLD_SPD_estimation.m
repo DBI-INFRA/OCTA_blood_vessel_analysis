@@ -36,7 +36,7 @@ addpath('helper_scripts');
 
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images & result directory
-result_path = 'results/240722_113517';
+result_path = 'results/240722_182751';
 
 % Parameters for skeletonization (median-filter & Frangi-filter)
 median_filter_size = 5;
@@ -44,10 +44,9 @@ frangi_opts.sigmarange = [1 6];
 frangi_opts.sigmastepsize = 2;
 frangi_opts.correctionconst1 = 0.8;
 frangi_opts.correctionconst2 = 15;
-thresholding_method = "local_adaptive_thresholding"; %"test_all";  % OPTIONS: "fuzzy_thresholding", "local_adaptive_thresholding" "otsu_thresholding"
+thresholding.method = "local_adaptive_thresholding"; %"test_all";  % OPTIONS: "fuzzy_thresholding", "local_adaptive_thresholding" "otsu_thresholding"
                                    %    Note: "test_all" will generate a plot with all different thresholding methods
-adaptive_tr_sensitivity = 0.3;     % The sensitivity of the local adaptive thresholding (higher values will pick up more of the vessels but potentially also more noise)
-VISUALIZE = false;
+thresholding.sensitivity = 0.3;     % The sensitivity of the local adaptive thresholding (higher values will pick up more of the vessels but potentially also more noise)
 
 % ================= Print parameters & parse input ========================
 % Print the selected parameters & image path
@@ -55,19 +54,9 @@ fprintf("\nIMAGE FOLDER PATH: \n  <%s>\n", result_path);
 fprintf('\nSELECTED PARAMETERS:\n  Median filter size: %d \n  Frangi filter: sigma range: [%d, %d], sigma stepsize: %d, correctionconst1: %.2f, correctionconst 2: %d\n\n', median_filter_size, frangi_opts.sigmarange(1), frangi_opts.sigmarange(2), frangi_opts.sigmastepsize, frangi_opts.correctionconst1, frangi_opts.correctionconst2);
 
 % Add new user parameters to parameters table
-params_path = fullfile(result_path, 'User_parameters.csv');
-params_table = readtable(params_path);
-params_table.("Median_filter_size") = median_filter_size;
-params_table.("Frangi_sigma_range") = strcat(num2str(frangi_opts.sigmarange(1)), ",", num2str(frangi_opts.sigmarange(2)));
-params_table.("Frangi_sigma_stepsize") = frangi_opts.sigmastepsize;
-params_table.("Frangi_sigma_correction_const1") = frangi_opts.correctionconst1;
-params_table.("Frangi_sigma_correction_const2") = frangi_opts.correctionconst2;
-params_table.("Thresholding_method") = thresholding_method;
-if thresholding_method == "local_adaptive_thresholding"
-    params_table.("Adaptive_thresholding_sensitivity") = adaptive_tr_sensitivity;
-end
-fprintf("\n"); disp(params_table);
-writetable(params_table, params_path);
+params_path = fullfile(result_path, 'InputParameters.mat');
+load(params_path, "pixel_size");
+save(params_path, "median_filter_size", "frangi_opts", "thresholding", "-append");
 
 % Create new folder for the results of CLD- & SPD-depth computation
 CLD_SPD_result_path = fullfile(result_path, '2_CLD_SPD_estimation');
@@ -75,7 +64,7 @@ mkdir(CLD_SPD_result_path);
 
 % Parse input directory
 fileList = dir(fullfile(result_path, '1_AlignedImages', '*.tif*'));
-imgInfo = readtable(fullfile(result_path, 'ImageSummary.csv'), 'ReadRowNames', true);
+imgInfo = readtable(fullfile(result_path, 'ImageSummary.csv'), 'ReadRowNames', true, 'Delimiter', ',');
 
 % ================= Compute the CLD- & SPD-depth for all images ===========
 % Inizialize empty arrays to store the CLD-depth and SPD-depth per image
@@ -86,15 +75,17 @@ SPD_depths = zeros(height(imgInfo), 1);
 fprintf("ESTIMATE THE CLD-DEPTH & SPD-DEPTH:\n")
 for ff = 1:length(fileList)
     image_path = fullfile(fileList(ff).folder, fileList(ff).name);
-    [CLD_depth, SPD_depth] = CLD_SPD_Estimation(image_path, median_filter_size, frangi_opts, thresholding_method, adaptive_tr_sensitivity, VISUALIZE, CLD_SPD_result_path, fileList(ff).name);
+    [CLD_depth, SPD_depth] = CLD_SPD_Estimation(image_path, median_filter_size, frangi_opts, thresholding, CLD_SPD_result_path, fileList(ff).name);
     CLD_depths(ff) = CLD_depth;
     SPD_depths(ff) = SPD_depth;
     fprintf("  Image: <%s>:  CLD_depth = %d,  SPD_depth = %d\n", fileList(ff).name, CLD_depth, SPD_depth);
 end
 
 % Add the CLD- & SPD-depth info as a new column to the table
-imgInfo.("CLD_Depth") = CLD_depths;
-imgInfo.("SPD_Depth") = SPD_depths;
+imgInfo.("CLD_Frame") = CLD_depths;
+imgInfo.("SPD_Frame") = SPD_depths;
+imgInfo.("CLD_Depth_um") = (CLD_depths-1)*pixel_size(3);
+imgInfo.("SPD_Depth_um") = (SPD_depths-1)*pixel_size(3);
 fprintf("\n"); disp(imgInfo);
 table_path = fullfile(result_path, 'ImageSummary.csv');
 writetable(imgInfo, table_path, 'WriteRowNames',true);
@@ -104,7 +95,7 @@ fprintf("\nOCTA Script 2: Estimation of CLD-depth & SPD-depth DONE\n");
 
 % ================= Function for CLD- & SPD-depth estimation ==============
 %% CLD-depth & SPD-depth Estimation
-function [CLD_depth, SPD_depth] = CLD_SPD_Estimation(image_path, median_filter_size, frangi_opts, thresholding_method, adaptive_tr_sensitivity, VISUALIZE, CLD_SPD_result_path, img_name)
+function [CLD_depth, SPD_depth] = CLD_SPD_Estimation(image_path, median_filter_size, frangi_opts, thresholding, CLD_SPD_result_path, img_name)
 
 % Load the selected image
 image = tiffreadVolume(image_path);
@@ -119,9 +110,10 @@ image = double(int16(squeeze(image)));
 %fprintf("COMPUTE THE NUMBER OF INDEPENDENT BLOOD VESSEL NETWORKS\n")
 depth = size(image, 3);
 num_segments_array = zeros(1, depth);
+VISUALIZE = false;
 for z = 1:depth
     depth_slice = image(:, :, z);
-    [skeletonized_slice, ~] = Skeletonization(depth_slice, median_filter_size, frangi_opts, thresholding_method, adaptive_tr_sensitivity, VISUALIZE, "none");
+    [skeletonized_slice, ~] = Skeletonization(depth_slice, median_filter_size, frangi_opts, thresholding, VISUALIZE, "none");
 
     % Find connected segments & count the number of independent segments
     segments = bwconncomp(skeletonized_slice);

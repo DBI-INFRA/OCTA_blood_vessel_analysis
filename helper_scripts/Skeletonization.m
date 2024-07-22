@@ -1,4 +1,4 @@
-function [skeletonized_img, binarized_img] = Skeletonization(image, median_filter_size, frangi_opts, thresholding_method, adaptive_tr_sensitivity, VISUALIZE, save_path)
+function [skeletonized_img, binarized_img] = Skeletonization(image, median_filter_size, frangi_opts, thresholding, VISUALIZE, save_path)
 % ---------------------------------------------------------------------------
 % Description:
 %    This function segments & skeletonizes the blood vessel network of the
@@ -31,12 +31,12 @@ image_median = medfilt2(image,[median_filter_size median_filter_size]);
 image_frangi = frangi_2Dfilter(image_median, frangi_opts);
 
 % 2) SEGMENTATION & SKELETONIZATION
-switch thresholding_method
+switch thresholding.method
     case 'fuzzy_thresholding'
         % Apply fuzzy thresholding to binarize & segment the image
         binarized_img = fuzzy_thresholding(image_frangi, 2, 3) - 1; % nth = 2 clusters
     case 'local_adaptive_thresholding'
-        adaptive_threshold = adaptthresh(image_frangi, adaptive_tr_sensitivity); % 2nd parameter is the sensitivity
+        adaptive_threshold = adaptthresh(image_frangi, thresholding.sensitivity); % 2nd parameter is the sensitivity
         binarized_img = imbinarize(image_frangi, adaptive_threshold);
     case 'otsu_thresholding'
         threshold = graythresh(image_frangi);
@@ -91,7 +91,7 @@ if VISUALIZE
     subplot(1,4,4); imshow(skeletonized_img); title('4. Skeletonization');
     F1.WindowState = 'maximized';
 
-    save_path2 = save_path(1:end-4) + "_skeletonized_" + thresholding_method + "_" + adaptive_tr_sensitivity + ".png";
+    save_path2 = save_path(1:end-4) + "_skeletonized_" + join(struct2array(thresholding), "_") + ".png";
     set(F1, 'PaperPositionMode', 'auto');
     print(F1, save_path2, '-dpng', '-r0', '-painters');
     saveas(gcf, save_path2);
