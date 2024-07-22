@@ -24,7 +24,7 @@ addpath('helper_scripts');
 
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images
-result_path = 'results/240719_141653';
+result_path = 'results/240722_113517';
 
 % Parameters for skeletonization (median-filter & Frangi-filter)
 median_filter_size = 5;
@@ -55,6 +55,13 @@ skeleton_result_path = fullfile(result_path, '3_MIP_skeletonization_results');
 if save_skeleton && ~isfolder(skeleton_result_path)
     mkdir(skeleton_result_path);
 end
+
+% Add new user parameters to parameters table
+params_path = fullfile(result_path, 'User_parameters.csv');
+params_table = readtable(params_path);
+params_table.("SPD_range") = SPD_range;
+fprintf("\n"); disp(params_table);
+writetable(params_table, params_path);
 
 % ================= Quantify all images in folder =========================
 fprintf("\nProcessing %d images:\n", num_images);

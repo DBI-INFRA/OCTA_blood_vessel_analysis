@@ -48,6 +48,11 @@ output_dir  = fullfile(result_dir, timenow);
 imwrite_dir = fullfile(output_dir, '1_AlignedImages');
 mkdir(imwrite_dir);
 
+% Save all user parameters in a table
+params_path = fullfile(output_dir, 'User_parameters.csv');
+params_table = table(AutoCrop, gamma, order, {wname}, reps, {orient}, dim, 'VariableNames', {'AutoCrop', 'WT_gamma', 'WT_order', 'WT_wname', 'WT_reps', 'WT_orient', 'WT_dim'});
+writetable(params_table, params_path);
+
 %% ================= Preprocess all images in input folder ================
 for ff = 1:length(filelist)
     img_path = fullfile(input_dir, filelist(ff).name);
