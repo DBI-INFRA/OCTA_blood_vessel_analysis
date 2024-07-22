@@ -24,11 +24,28 @@ import fuzzylogic.*
 set(0,'DefaultFigureWindowStyle' , 'normal');
 
 % 1) PREPROCESSING
+
+% pad the image to avoid boundary artefacts, currently hard-coded, may
+% move to function parameter
+pad = true;
+if pad
+    image_orig = image;
+    % Define padding size
+    padSize = 10;  % Adjust the padding size as needed
+    % Pad the image symmetrically
+    image = padarray(image_orig, [padSize padSize], 'symmetric');
+end
+
 % Median-filter the image
 image_median = medfilt2(image,[median_filter_size median_filter_size]);
 
 % Apply Frangi filter to image
 image_frangi = frangi_2Dfilter(image_median, frangi_opts);
+
+% Crop back if pad == true
+if pad
+    image_frangi = image_frangi(padSize+1:end-padSize, padSize+1:end-padSize);
+end
 
 % 2) SEGMENTATION & SKELETONIZATION
 switch thresholding.method
@@ -56,20 +73,23 @@ switch thresholding.method
         binarized_img_ad_tr3 = imbinarize(image_frangi, adaptive_tr3);
         binarized_img = binarized_img_fuzzy; % Use fuzzy tr. as the default
 
+        if VISUALIZE
         % Create figure for different thresholding results
-        Ft = figure(1);
-        subplot(2,3,1); imshow(image_median./255); title('Median filtered image');
-        subplot(2,3,2); imshow(binarized_img_fuzzy); title('Fuzzy thresholding');
-        subplot(2,3,3); imshow(binarized_img_otsu); title('Otsu thresholding');
-        subplot(2,3,4); imshow(binarized_img_ad_tr1); title('Adaptive local tr., sensitivity = 0.2');
-        subplot(2,3,5); imshow(binarized_img_ad_tr2); title('Adaptive local tr., sensitivity = 0.4');
-        subplot(2,3,6); imshow(binarized_img_ad_tr3); title('Adaptive local tr., sensitivity = 0.6');
-        Ft.WindowState = 'maximized';
-        save_path2 = save_path(1:end-4) + "_all_thresholding_methods.png";
-        set(Ft, 'PaperPositionMode', 'auto');
-        print(Ft, save_path2, '-dpng', '-r0', '-painters');
-        saveas(gcf, save_path2);
-        close(Ft);
+            Ft = figure(1);
+            subplot(2,3,1); imshow(image_median./255); title('Median filtered image');
+            subplot(2,3,2); imshow(binarized_img_fuzzy); title('Fuzzy thresholding');
+            subplot(2,3,3); imshow(binarized_img_otsu); title('Otsu thresholding');
+            subplot(2,3,4); imshow(binarized_img_ad_tr1); title('Adaptive local tr., sensitivity = 0.2');
+            subplot(2,3,5); imshow(binarized_img_ad_tr2); title('Adaptive local tr., sensitivity = 0.4');
+            subplot(2,3,6); imshow(binarized_img_ad_tr3); title('Adaptive local tr., sensitivity = 0.6');
+            % Ft.WindowState = 'maximized';
+            save_path2 = strcat(save_path(1:end-4), "_all_thresholding_methods.png");
+            set(Ft, 'PaperPositionMode', 'auto');
+            print(Ft, save_path2, '-dpng', '-r0', '-painters');
+            saveas(gcf, save_path2);
+            close(Ft);
+        end
+
     otherwise
         disp(['The selected thresholding method does not exist. ' ...
             'Please select one from the following: {fuzzy_thresholding, ' ...
@@ -89,8 +109,7 @@ if VISUALIZE
     subplot(1,4,2); imshow(image_frangi); title('2. Frangi filtering');
     subplot(1,4,3); imshow(binarized_img); title('3. Fuzzy thresholding');
     subplot(1,4,4); imshow(skeletonized_img); title('4. Skeletonization');
-    F1.WindowState = 'maximized';
-
+    % F1.WindowState = 'maximized';
     save_path2 = save_path(1:end-4) + "_skeletonized_" + join(struct2array(thresholding), "_") + ".png";
     set(F1, 'PaperPositionMode', 'auto');
     print(F1, save_path2, '-dpng', '-r0', '-painters');
