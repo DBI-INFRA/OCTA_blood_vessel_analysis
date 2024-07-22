@@ -24,14 +24,18 @@ addpath('helper_scripts');
 input_dir = 'sample_data';
 
 % Result directory & optional result
-% result_dir = 'N:\SUN-BMI-DBI-DATA-NOBACKUP\NinaMK\Results';
 result_dir = 'results';
+
+% Pixel size in micrometers
+pixel_size = [6.49, 6.49, 2.45];
 
 % Optional results to write
 writeZDisplacement = true;
 
 % Automated image cropping
-AutoCrop = false; %true;
+% The sample data has already been cropped to size and should have AutoCrop
+% set to false. If using uncropped data, please set AutoCrop to true.
+AutoCrop = false;
 
 % Wavelet Transform Parameters
 gamma = 10; order = 4; wname = 'db20'; reps = 2; orient = 'both'; dim = 3;
@@ -49,9 +53,13 @@ imwrite_dir = fullfile(output_dir, '1_AlignedImages');
 mkdir(imwrite_dir);
 
 % Save all user parameters in a table
-params_path = fullfile(output_dir, 'User_parameters.csv');
-params_table = table(AutoCrop, gamma, order, {wname}, reps, {orient}, dim, 'VariableNames', {'AutoCrop', 'WT_gamma', 'WT_order', 'WT_wname', 'WT_reps', 'WT_orient', 'WT_dim'});
-writetable(params_table, params_path);
+params_path = fullfile(output_dir, 'InputParameters');
+user_params = struct("PixelX_um", pixel_size(1), "PixelY_um", pixel_size(2), ...
+                     "PixelZ_um", pixel_size(3), "AutoCrop", AutoCrop, ...
+                     "WT_gamma", gamma, "WT_order", order, "WT_wname", wname, ...
+                     "WT_reps", reps, "WT_orient", orient, "WT_dim", dim);
+save([params_path '.mat'], "user_params");
+writecell([fieldnames(user_params), struct2cell(user_params)], [params_path, '.csv']);
 
 %% ================= Preprocess all images in input folder ================
 for ff = 1:length(filelist)
@@ -97,9 +105,6 @@ for ff = 1:length(filelist)
 end
 
 %% ================= Write summary of image alignment & resolution ========
-T = horzcat(cell2table(fileinfo), array2table(fileslice));
-T.Properties.RowNames = {filelist.name};
-T.Properties.VariableNames = {'XRes', 'YRes', 'ResUnit', ...
-                               'First Slice', 'Last Slice'};
+T = array2table(fileslice, "RowNames", {filelist.name}, "VariableNames", {'First Slice', 'Last Slice'});
 writetable(T, fullfile(output_dir, 'ImageSummary.csv'), 'WriteRowNames', true);
 fprintf("\nOCTA Script 1: Preprocessing & Skin-Border Alignment DONE\n");
