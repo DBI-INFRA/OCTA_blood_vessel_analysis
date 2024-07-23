@@ -100,7 +100,7 @@ switch thresholding.method
             
             % Save results as a matplot-figure
             save_path2 = fullfile(threshold_res_path, img_name);
-            exportgraphics(gcf, save_path2 + ".pdf", 'ContentType', 'vector');
+            exportgraphics(gcf, strcat(save_path2, ".pdf"), 'ContentType', 'vector');
             saveas(gcf, save_path2);
             close(Ft);
         end
