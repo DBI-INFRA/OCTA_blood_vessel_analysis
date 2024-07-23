@@ -47,6 +47,8 @@ if pad
     image_frangi = image_frangi(padSize+1:end-padSize, padSize+1:end-padSize);
 end
 
+[path, img_name, ~] = fileparts(save_path);
+
 % 2) SEGMENTATION & SKELETONIZATION
 switch thresholding.method
     case 'fuzzy_thresholding'
@@ -78,10 +80,9 @@ switch thresholding.method
             adaptive_tr = adaptthresh(image_frangi, thresholding.test_sensitivities(i));
             binarized_images_adaptive{i} = imbinarize(image_frangi, adaptive_tr);
         end
-
+        
         % Create figure for different thresholding results
         if VISUALIZE
-            [path, img_name, ~] = fileparts(save_path);
             threshold_res_path = fullfile(path, "Thresholding_Comparision");
             if ~exist(threshold_res_path, 'dir')
                 mkdir(threshold_res_path);
@@ -116,6 +117,13 @@ end
 % Skeletonize the binary image
 skeletonized_img = bwmorph(binarized_img, 'skel', Inf);
 
+% Save skeleton to result folder
+skeletonization_path = fullfile(path, "Skeletonization");
+if ~exist(skeletonization_path, 'dir')
+    mkdir(skeletonization_path);
+end
+skeletonized_img_path = fullfile(skeletonization_path, strcat(img_name, "_skeleton.tif"));
+imwrite(skeletonized_img, skeletonized_img_path);
 
 if VISUALIZE
     % Display the processed image at the different steps
@@ -131,7 +139,7 @@ if VISUALIZE
     subplot(1,4,3); imshow(binarized_img); title(threshold_title);
     subplot(1,4,4); imshow(skeletonized_img); title('4. Skeletonization');
 
-    save_path2 = strcat(save_path(1:end-4), "_skeletonized_", threshold_title(3:end));
+    save_path2 = strcat(save_path(1:end-4), threshold_title(3:end));
     exportgraphics(gcf, strcat(save_path2, ".pdf"), 'ContentType', 'vector');
     saveas(gcf, save_path2);
     close(F1);
