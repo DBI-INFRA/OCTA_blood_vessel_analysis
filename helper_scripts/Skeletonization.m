@@ -59,19 +59,25 @@ switch thresholding.method
         threshold = graythresh(image_frangi);
         binarized_img = imbinarize(image_frangi, threshold);
     case 'test_all'
-        disp("You selected <test_all>. This will generate a plot for " + ...
+        sensitivities_str = sprintf('%.1f, ', thresholding.test_sensitivities);
+        fprintf("  You selected <test_all>. This will generate a plot for " + ...
             "each available thresholding method, including local adaptive " + ...
-            "thresholding with 3 different options for the sensitivity (0.2, 0.4, 0.6)")
+            "thresholding with the following values for the sensitivity: %s\n", ...
+            sensitivities_str);
+        % Test fuzzy & otsu thresholding, set fuzzy tr. result as the default
+        % which is used for the remaining computations
         binarized_img_fuzzy = fuzzy_thresholding(image_frangi, 2, 3) - 1;
+        binarized_img = binarized_img_fuzzy;
         threshold = graythresh(image_frangi);
         binarized_img_otsu = imbinarize(image_frangi, threshold);
-        adaptive_tr1 = adaptthresh(image_frangi, 0.2);
-        binarized_img_ad_tr1 = imbinarize(image_frangi, adaptive_tr1);
-        adaptive_tr2 = adaptthresh(image_frangi, 0.4);
-        binarized_img_ad_tr2 = imbinarize(image_frangi, adaptive_tr2);
-        adaptive_tr3 = adaptthresh(image_frangi, 0.6);
-        binarized_img_ad_tr3 = imbinarize(image_frangi, adaptive_tr3);
-        binarized_img = binarized_img_fuzzy; % Use fuzzy tr. as the default
+
+        % Apply adaptive thresholding for each chosen sensitivity value
+        num_sensitivities = numel(thresholding.test_sensitivities);
+        binarized_images_adaptive = cell(1, num_sensitivities);
+        for i = 1:num_sensitivities
+            adaptive_tr = adaptthresh(image_frangi, thresholding.test_sensitivities(i));
+            binarized_images_adaptive{i} = imbinarize(image_frangi, adaptive_tr);
+        end
 
         % Create figure for different thresholding results
         if VISUALIZE
@@ -81,13 +87,18 @@ switch thresholding.method
                 mkdir(threshold_res_path);
             end
             Ft = figure(1);
-            subplot(2,3,1); imshow(image_median./255); title('Median filtered image');
-            subplot(2,3,2); imshow(binarized_img_fuzzy); title('Fuzzy thresholding');
-            subplot(2,3,3); imshow(binarized_img_otsu); title('Otsu thresholding');
-            subplot(2,3,4); imshow(binarized_img_ad_tr1); title('Adaptive local tr., sensitivity = 0.2');
-            subplot(2,3,5); imshow(binarized_img_ad_tr2); title('Adaptive local tr., sensitivity = 0.4');
-            subplot(2,3,6); imshow(binarized_img_ad_tr3); title('Adaptive local tr., sensitivity = 0.6');
-            % Ft.WindowState = 'maximized';
+
+            num_rows = ceil((num_sensitivities + 3) / 3);
+            subplot(num_rows, 3, 1); imshow(image_median./255); title('Median filtered image');
+            subplot(num_rows, 3, 2); imshow(binarized_img_fuzzy); title('Fuzzy thresholding');
+            subplot(num_rows, 3, 3); imshow(binarized_img_otsu); title('Otsu thresholding');
+            for i = 1:num_sensitivities
+                subplot(num_rows, 3, i + 3);
+                imshow(binarized_images_adaptive{i});
+                title(sprintf('Adaptive local tr., sensitivity = %.1f', thresholding.test_sensitivities(i)));
+            end
+            
+            % Save results as a matplot-figure
             save_path2 = fullfile(threshold_res_path, img_name);
             saveas(gcf, save_path2);
             close(Ft);

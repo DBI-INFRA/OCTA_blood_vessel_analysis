@@ -30,6 +30,12 @@ result_path = 'results/240723_164211';
 
 % Set to true if you want to test & view different thresholding methods
 test_thresholding_methods = true;
+% Choose different values for the sensitivity parameter in local adaptive
+% thresholding. The <test_threshold>-method will then apply local adaptive
+% thresholding with each different sensitivity parameter, and create a new
+% subplot for each version that can be found under the following path:
+% <3_MIP_skeletonization_results/Thresholding_Comparision>
+local_adaptive_thresholding_sensitivities = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6];
 
 % Parameters for skeletonization (median-filter & Frangi-filter)
 save_skeleton = true;
@@ -44,6 +50,7 @@ load(params_path);
 
 if test_thresholding_methods
     thresholding.method = "test_all";
+    thresholding.test_sensitivities = local_adaptive_thresholding_sensitivities;
 end
 
 SPD_range   = round(SPD_range_um/pixel_size(3));
