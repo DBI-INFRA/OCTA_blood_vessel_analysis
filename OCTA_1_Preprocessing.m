@@ -36,6 +36,10 @@ writeZDisplacement = true;
 % The sample data has already been cropped to size and should have AutoCrop
 % set to false. If using uncropped data, please set AutoCrop to true.
 AutoCrop = false;
+% Value between [0, 1] to control amount of end-cropping for the OCT stack. 
+% 0 means more data will be kept and 1 means more data will be cropped. 
+% Can be set to 'None' to prevent cropping from end of dataset
+CropSensitivty = 0.5;
 
 % Wavelet Transform Parameters
 gamma = 10; order = 4; wname = 'db20'; reps = 2; orient = 'both'; dim = 3;
@@ -54,9 +58,9 @@ mkdir(imwrite_dir);
 
 % Save all user parameters in a table
 params_path = fullfile(output_dir, 'InputParameters.mat');
-preprocess_opts = struct("AutoCrop", AutoCrop, "WT_gamma", gamma, ...
-                     "WT_order", order, "WT_wname", wname, ...
-                     "WT_reps", reps, "WT_orient", orient, "WT_dim", dim);
+preprocess_opts = struct("AutoCrop", AutoCrop, "CropSensitivity", CropSensitivity, ...
+                    "WT_gamma", gamma, "WT_order", order, "WT_wname", wname, ...
+                    "WT_reps", reps, "WT_orient", orient, "WT_dim", dim);
 save(params_path, "pixel_size", "preprocess_opts");
 
 %% ================= Preprocess all images in input folder ================
@@ -71,7 +75,7 @@ for ff = 1:length(filelist)
     OCTStack = tiffreadVolume(img_path);
     OCTStack = OCTStack(:,:,:,1);
     if AutoCrop
-        [CroppedOCTStack, crop_range] = AutoCropOCTStack(OCTStack);
+        [CroppedOCTStack, crop_range] = AutoCropOCTStack(OCTStack, CropSensitivty);
         fileslice(ff,:) = crop_range;
     else 
         CroppedOCTStack = OCTStack;
