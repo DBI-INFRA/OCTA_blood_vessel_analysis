@@ -73,8 +73,13 @@ switch thresholding.method
         binarized_img_ad_tr3 = imbinarize(image_frangi, adaptive_tr3);
         binarized_img = binarized_img_fuzzy; % Use fuzzy tr. as the default
 
-        if VISUALIZE
         % Create figure for different thresholding results
+        if VISUALIZE
+            [path, img_name, ~] = fileparts(save_path);
+            threshold_res_path = fullfile(path, "Thresholding_Comparision");
+            if ~exist(threshold_res_path, 'dir')
+                mkdir(threshold_res_path);
+            end
             Ft = figure(1);
             subplot(2,3,1); imshow(image_median./255); title('Median filtered image');
             subplot(2,3,2); imshow(binarized_img_fuzzy); title('Fuzzy thresholding');
@@ -83,9 +88,7 @@ switch thresholding.method
             subplot(2,3,5); imshow(binarized_img_ad_tr2); title('Adaptive local tr., sensitivity = 0.4');
             subplot(2,3,6); imshow(binarized_img_ad_tr3); title('Adaptive local tr., sensitivity = 0.6');
             % Ft.WindowState = 'maximized';
-            save_path2 = strcat(save_path(1:end-4), "_all_thresholding_methods.png");
-            set(Ft, 'PaperPositionMode', 'auto');
-            print(Ft, save_path2, '-dpng', '-r0', '-painters');
+            save_path2 = fullfile(threshold_res_path, img_name);
             saveas(gcf, save_path2);
             close(Ft);
         end

@@ -26,7 +26,10 @@ addpath('helper_scripts');
 
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images
-result_path = 'results/240723_155715';
+result_path = 'results/240723_164211';
+
+% Set to true if you want to test & view different thresholding methods
+test_thresholding_methods = true;
 
 % Parameters for skeletonization (median-filter & Frangi-filter)
 save_skeleton = true;
@@ -38,6 +41,11 @@ SPD_range_um = 30;
 fileList    = dir(fullfile(result_path, "1_AlignedImages", "*.tif*"));
 params_path = fullfile(result_path, 'InputParameters.mat');
 load(params_path);
+
+if test_thresholding_methods
+    thresholding.method = "test_all";
+end
+
 SPD_range   = round(SPD_range_um/pixel_size(3));
 img_reso    = pixel_size(1:2);
 imgInfo     = readtable(fullfile(result_path, 'ImageSummary.csv'), 'ReadRowNames',true);
