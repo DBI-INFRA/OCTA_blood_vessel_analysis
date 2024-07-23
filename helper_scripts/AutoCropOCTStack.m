@@ -24,7 +24,7 @@ if ~exist("sensitivity", "var")
     sensitivity = 0.5;    
 end
 
-if sensitivity == "None"
+if string(sensitivity) == "None"
     stop_pos = size(stack_in, 3);
 elseif (0 <= sensitivity) && (sensitivity <= 1)
     stop_range = sort([stack_mean(start_pos), median(stack_mean(end-9:end))]);
