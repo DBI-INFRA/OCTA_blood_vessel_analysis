@@ -21,7 +21,7 @@ addpath('helper_scripts');
 %% ================= User Parameters ======================================
 % Input image directory containing the original OCT images.
 % Note: The image data should be in local drive for fast read/write speed
-input_dir = 'sample_data';
+input_dir = 'C:\Users\Tricia\Desktop\NinaMK\For DBI';
 
 % Result directory & optional result
 result_dir = 'results';
@@ -35,7 +35,7 @@ writeZDisplacement = true;
 % Automated image cropping
 % The sample data has already been cropped to size and should have AutoCrop
 % set to false. If using uncropped data, please set AutoCrop to true.
-AutoCrop = false;
+AutoCrop = true;
 % Value between [0, 1] to control amount of end-cropping for the OCT stack. 
 % 0 means more data will be kept and 1 means more data will be cropped. 
 % Can be set to 'None' to prevent cropping from end of dataset
