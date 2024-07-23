@@ -36,7 +36,7 @@ addpath('helper_scripts');
 
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images & result directory
-result_path = 'results/240719_141653';
+result_path = 'results/240723_120342';
 
 % Parameters for skeletonization (median-filter & Frangi-filter)
 median_filter_size = 5;
@@ -44,15 +44,19 @@ frangi_opts.sigmarange = [1 6];
 frangi_opts.sigmastepsize = 2;
 frangi_opts.correctionconst1 = 0.8;
 frangi_opts.correctionconst2 = 15;
-thresholding_method = "test_all";  % OPTIONS: "fuzzy_thresholding", "local_adaptive_thresholding" "otsu_thresholding"
+thresholding.method = "local_adaptive_thresholding"; %"test_all";  % OPTIONS: "fuzzy_thresholding", "local_adaptive_thresholding" "otsu_thresholding"
                                    %    Note: "test_all" will generate a plot with all different thresholding methods
-adaptive_tr_sensitivity = 0.3;     % The sensitivity of the local adaptive thresholding (higher values will pick up more of the vessels but potentially also more noise)
-VISUALIZE = false;
+thresholding.sensitivity = 0.3;     % The sensitivity of the local adaptive thresholding (higher values will pick up more of the vessels but potentially also more noise)
 
 % ================= Print parameters & parse input ========================
 % Print the selected parameters & image path
 fprintf("\nIMAGE FOLDER PATH: \n  <%s>\n", result_path);
 fprintf('\nSELECTED PARAMETERS:\n  Median filter size: %d \n  Frangi filter: sigma range: [%d, %d], sigma stepsize: %d, correctionconst1: %.2f, correctionconst 2: %d\n\n', median_filter_size, frangi_opts.sigmarange(1), frangi_opts.sigmarange(2), frangi_opts.sigmastepsize, frangi_opts.correctionconst1, frangi_opts.correctionconst2);
+
+% Add new user parameters to parameters table
+params_path = fullfile(result_path, 'InputParameters.mat');
+load(params_path, "pixel_size");
+save(params_path, "median_filter_size", "frangi_opts", "thresholding", "-append");
 
 % Create new folder for the results of CLD- & SPD-depth computation
 CLD_SPD_result_path = fullfile(result_path, '2_CLD_SPD_estimation');
@@ -60,7 +64,7 @@ mkdir(CLD_SPD_result_path);
 
 % Parse input directory
 fileList = dir(fullfile(result_path, '1_AlignedImages', '*.tif*'));
-imgInfo = readtable(fullfile(result_path, 'ImageSummary.csv'), 'ReadRowNames', true);
+imgInfo = readtable(fullfile(result_path, 'ImageSummary.csv'), 'ReadRowNames', true, 'Delimiter', ',');
 
 % ================= Compute the CLD- & SPD-depth for all images ===========
 % Inizialize empty arrays to store the CLD-depth and SPD-depth per image
@@ -71,15 +75,17 @@ SPD_depths = zeros(height(imgInfo), 1);
 fprintf("ESTIMATE THE CLD-DEPTH & SPD-DEPTH:\n")
 for ff = 1:length(fileList)
     image_path = fullfile(fileList(ff).folder, fileList(ff).name);
-    [CLD_depth, SPD_depth] = CLD_SPD_Estimation(image_path, median_filter_size, frangi_opts, thresholding_method, adaptive_tr_sensitivity, VISUALIZE, CLD_SPD_result_path, fileList(ff).name);
+    [CLD_depth, SPD_depth] = CLD_SPD_Estimation(image_path, median_filter_size, frangi_opts, thresholding, CLD_SPD_result_path, fileList(ff).name, pixel_size(3));
     CLD_depths(ff) = CLD_depth;
     SPD_depths(ff) = SPD_depth;
     fprintf("  Image: <%s>:  CLD_depth = %d,  SPD_depth = %d\n", fileList(ff).name, CLD_depth, SPD_depth);
 end
 
 % Add the CLD- & SPD-depth info as a new column to the table
-imgInfo.("CLD_Depth") = CLD_depths;
-imgInfo.("SPD_Depth") = SPD_depths;
+imgInfo.("CLD_Frame") = CLD_depths;
+imgInfo.("SPD_Frame") = SPD_depths;
+imgInfo.("CLD_Depth_um") = (CLD_depths-1)*pixel_size(3);
+imgInfo.("SPD_Depth_um") = (SPD_depths-1)*pixel_size(3);
 fprintf("\n"); disp(imgInfo);
 table_path = fullfile(result_path, 'ImageSummary.csv');
 writetable(imgInfo, table_path, 'WriteRowNames',true);
@@ -89,7 +95,7 @@ fprintf("\nOCTA Script 2: Estimation of CLD-depth & SPD-depth DONE\n");
 
 % ================= Function for CLD- & SPD-depth estimation ==============
 %% CLD-depth & SPD-depth Estimation
-function [CLD_depth, SPD_depth] = CLD_SPD_Estimation(image_path, median_filter_size, frangi_opts, thresholding_method, adaptive_tr_sensitivity, VISUALIZE, CLD_SPD_result_path, img_name)
+function [CLD_depth, SPD_depth] = CLD_SPD_Estimation(image_path, median_filter_size, frangi_opts, thresholding, CLD_SPD_result_path, img_name, pixel_size)
 
 % Load the selected image
 image = tiffreadVolume(image_path);
@@ -104,9 +110,10 @@ image = double(int16(squeeze(image)));
 %fprintf("COMPUTE THE NUMBER OF INDEPENDENT BLOOD VESSEL NETWORKS\n")
 depth = size(image, 3);
 num_segments_array = zeros(1, depth);
+VISUALIZE = false;
 for z = 1:depth
     depth_slice = image(:, :, z);
-    [skeletonized_slice, ~] = Skeletonization(depth_slice, median_filter_size, frangi_opts, thresholding_method, adaptive_tr_sensitivity, VISUALIZE, "none");
+    [skeletonized_slice, ~] = Skeletonization(depth_slice, median_filter_size, frangi_opts, thresholding, VISUALIZE, "none");
 
     % Find connected segments & count the number of independent segments
     segments = bwconncomp(skeletonized_slice);
@@ -136,44 +143,53 @@ if isempty(SPD_depth) || isempty(CLD_depth)
     error('CLD depth or SPD_depth is empty. Please check if the input is correct');
 end
 
+% Adapt metrics to micron-scale
+CLD_depth_um = round((CLD_depth-1) * pixel_size, 1);
+SPD_depth_um = round((SPD_depth-1) * pixel_size, 1);
+depth_in_microns = (0:depth-1) * pixel_size;
+
 % Create a graph that plots the number of independent segments per depth slice
 figure;
 subplot(2, 1, 1);  % Subplot for original data
-plot(1:depth, num_segments_array, '-', 'LineWidth', 1.5);
+plot(depth_in_microns, num_segments_array, '-', 'LineWidth', 1.5);
 xlabel('Depth');
 ylabel('#Independent segments');
 title('Original Data');
 grid on;
 hold on; % Adding annotations
-plot(CLD_depth, num_segments_array(CLD_depth), 'ro', 'MarkerSize', 10);
-text(CLD_depth, num_segments_array(CLD_depth), sprintf('  CLD depth: %d', CLD_depth), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
-plot(SPD_depth, num_segments_array(SPD_depth), 'ro', 'MarkerSize', 10);
-text(SPD_depth, num_segments_array(SPD_depth), sprintf('  SPD depth: %d', SPD_depth), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
+plot(CLD_depth_um, num_segments_array(CLD_depth), 'ro', 'MarkerSize', 10);
+text(CLD_depth_um, num_segments_array(CLD_depth), sprintf('  CLD depth: %.1f', CLD_depth_um), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
+plot(SPD_depth_um, num_segments_array(SPD_depth), 'ro', 'MarkerSize', 10);
+text(SPD_depth_um, num_segments_array(SPD_depth), sprintf('  SPD depth: %.1f', SPD_depth_um), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
 hold off;
 
 subplot(2, 1, 2);  % Subplot for smoothed data
-plot(1:depth, smoothed_array, '-', 'LineWidth', 1.5);
+plot(depth_in_microns, smoothed_array, '-', 'LineWidth', 1.5);
 xlabel('Depth');
 ylabel('#Independent segments');
 title(['Smoothed Data (Window Size: ', num2str(window_size), ')']);
 grid on;
 hold on; % Adding annotations
-plot(CLD_depth, smoothed_array(CLD_depth), 'ro', 'MarkerSize', 10);
-text(CLD_depth, smoothed_array(CLD_depth), sprintf('  CLD depth: %d', CLD_depth), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
-plot(SPD_depth, smoothed_array(SPD_depth), 'ro', 'MarkerSize', 10);
-text(SPD_depth, smoothed_array(SPD_depth), sprintf('  SPD depth: %d', SPD_depth), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
+plot(CLD_depth_um, smoothed_array(CLD_depth), 'ro', 'MarkerSize', 10);
+text(CLD_depth_um, smoothed_array(CLD_depth), sprintf('  CLD depth: %.1f', CLD_depth_um), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
+plot(SPD_depth_um, smoothed_array(SPD_depth), 'ro', 'MarkerSize', 10);
+text(SPD_depth_um, smoothed_array(SPD_depth), sprintf('  SPD depth: %.1f', SPD_depth_um), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
 hold off;
 
 [~, fileName, ~] = fileparts(img_name);
 saveas(gcf, fullfile(CLD_SPD_result_path, strcat(img_name, '_Independent_segments_per_depth_graph.png')));
-
 close
+
+% Interpolate data to micron-depth scale
+new_micron_depth = round(linspace(0, (depth-1) * pixel_size, (depth-1) * pixel_size + 1)');
+num_segments_interp = interp1(depth_in_microns, num_segments_array, new_micron_depth, 'linear');
+smoothed_segments_interp = interp1(depth_in_microns, smoothed_array, new_micron_depth, 'linear');
 
 % Save independent segments per depth array (original & smoothed) to a csv-file.
 % Additionally, save the estimated CLD- & SPD-depth in separate columns
-CLD_info_col = zeros(length(num_segments_array), 1); CLD_info_col(1) = CLD_depth;
-SPD_info_col = zeros(length(num_segments_array), 1); SPD_info_col(1) = SPD_depth;
-data_table = table((1:depth)', num_segments_array', smoothed_array', CLD_info_col, SPD_info_col, 'VariableNames', {'Depth', 'num_segments', 'smoothed_num_segments', 'CLD_depth', 'SPD_depth'});
+CLD_info_col = zeros(length(num_segments_interp), 1); CLD_info_col(1) = CLD_depth_um;
+SPD_info_col = zeros(length(num_segments_interp), 1); SPD_info_col(1) = SPD_depth_um;
+data_table = table(new_micron_depth, num_segments_interp, smoothed_segments_interp, CLD_info_col, SPD_info_col, 'VariableNames', {'Depth_um', 'num_segments', 'smoothed_num_segments', 'CLD_depth', 'SPD_depth'});
 file_path = fullfile(CLD_SPD_result_path, strcat(fileName, '_Independent_segments_per_depth_data.csv'));
 writetable(data_table, file_path);
 %fprintf("\nNumber of segments per depth data saved to <%s>\n", file_path);

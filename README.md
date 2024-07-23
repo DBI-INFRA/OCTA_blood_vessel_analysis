@@ -1,18 +1,15 @@
 # OCTA_blood_vessel_analysis
 Automated analysis of blood vessel morphology using angiographic optical coherence tomography
 
-## Packages not listed in the [get_on_board document](https://docs.google.com/document/d/1ImfGcJCpAeGmOIU6tuFuhFNlozQgO0_ssb3ua0MubwE/edit)
-Fuzzy Logic Toolbox
-
-Curve Fitting Toolbox
-
-Wavelet Toolbox
-
-Deep Learning Toolbox
+## MATLAB Toolboxes required
+- Fuzzy Logic Toolbox
+- Curve Fitting Toolbox
+- Wavelet Toolbox
+- Deep Learning Toolbox
 
 ## Usage and code structures
 
-The project needs to be run by the three .m files sequentially in the main folder with the name starting with "OCTA_". .m files in the folder ```helper_scripts```inclues helper functions that are called by the the main files.
+This package consists of three pipelines for performing OCTA analysis. The project needs to be run by the three .m files sequentially in the main folder with the name starting with "OCTA_". .m files in the folder ```helper_scripts```inclues helper functions that are called by the the main files.
 
 #### OCTA_1_Preprocessing.m
 
@@ -41,7 +38,3 @@ You will need to do the same as the second step: go to the ```OCTA_3_MorphQuant.
 
 ## Parameters explanations
 T.B.D
-
-
-
-
