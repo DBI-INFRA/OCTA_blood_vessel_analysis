@@ -141,9 +141,9 @@ if VISUALIZE
 
     threshold_title_save = char(thresholding.method);
     if strcmp(thresholding.method, 'local_adaptive_thresholding')
-        threshold_title_save = char(strcat(threshold_title_save, "_s=", strrep(num2str(thresholding.sensitivity), ".", ",")));
+        threshold_title_save = char(strcat("adaptive_thresholding_s=", strrep(num2str(thresholding.sensitivity), ".", ",")));
     end
-    save_path2 = strcat(save_path(1:end-4), threshold_title_save);
+    save_path2 = strcat(save_path(1:end-4), "_", threshold_title_save);
     exportgraphics(gcf, strcat(save_path2, ".pdf"), 'ContentType', 'vector');
     saveas(gcf, save_path2);
     close(F1);
