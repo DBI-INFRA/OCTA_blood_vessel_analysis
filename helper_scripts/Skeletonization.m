@@ -130,16 +130,20 @@ if VISUALIZE
     F1 = figure(1);
     subplot(1,4,1); imshow(image_median./255); title('1. Median filtering');
     subplot(1,4,2); imshow(image_frangi); title('2. Frangi filtering');
-    threshold_title = strcat('3. ', thresholding.method);
+    threshold_title = char(strcat('3. ', char(thresholding.method)));
     if strcmp(thresholding.method, 'local_adaptive_thresholding')
-        threshold_title = strcat(threshold_title, "_", thresholding.sensitivity);
+        threshold_title = char(strcat("3. Local adaptive thresholding, sensitiviy=", strrep(num2str(thresholding.sensitivity), ".", ",")));
     elseif strcmp(thresholding.method, 'test_all')
         threshold_title = char("3. Fuzzy thresholding");
     end
     subplot(1,4,3); imshow(binarized_img); title(threshold_title);
     subplot(1,4,4); imshow(skeletonized_img); title('4. Skeletonization');
 
-    save_path2 = strcat(save_path(1:end-4), threshold_title(3:end));
+    threshold_title_save = char(thresholding.method);
+    if strcmp(thresholding.method, 'local_adaptive_thresholding')
+        threshold_title_save = char(strcat(threshold_title_save, "_s=", strrep(num2str(thresholding.sensitivity), ".", ",")));
+    end
+    save_path2 = strcat(save_path(1:end-4), threshold_title_save);
     exportgraphics(gcf, strcat(save_path2, ".pdf"), 'ContentType', 'vector');
     saveas(gcf, save_path2);
     close(F1);

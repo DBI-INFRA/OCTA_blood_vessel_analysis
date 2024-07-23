@@ -29,7 +29,7 @@ addpath('helper_scripts');
 result_path = 'results/240723_201053';
 
 % Set to true if you want to test & view different thresholding methods
-test_thresholding_methods = true;
+test_thresholding_methods = false;
 % Choose different values for the sensitivity parameter in local adaptive
 % thresholding. The <test_threshold>-method will then apply local adaptive
 % thresholding with each different sensitivity parameter, and create a new
