@@ -100,6 +100,7 @@ switch thresholding.method
             
             % Save results as a matplot-figure
             save_path2 = fullfile(threshold_res_path, img_name);
+            exportgraphics(gcf, save_path2 + ".pdf", 'ContentType', 'vector');
             saveas(gcf, save_path2);
             close(Ft);
         end
@@ -121,12 +122,17 @@ if VISUALIZE
     F1 = figure(1);
     subplot(1,4,1); imshow(image_median./255); title('1. Median filtering');
     subplot(1,4,2); imshow(image_frangi); title('2. Frangi filtering');
-    subplot(1,4,3); imshow(binarized_img); title('3. Fuzzy thresholding');
+    threshold_title = strcat('3. ', thresholding.method);
+    if strcmp(thresholding.method, 'local_adaptive_thresholding')
+        threshold_title = strcat(threshold_title, "_", thresholding.sensitivity);
+    elseif strcmp(thresholding.method, 'test_all')
+        threshold_title = char("3. Fuzzy thresholding");
+    end
+    subplot(1,4,3); imshow(binarized_img); title(threshold_title);
     subplot(1,4,4); imshow(skeletonized_img); title('4. Skeletonization');
-    % F1.WindowState = 'maximized';
-    save_path2 = save_path(1:end-4) + "_skeletonized_" + join(struct2array(thresholding), "_") + ".png";
-    set(F1, 'PaperPositionMode', 'auto');
-    print(F1, save_path2, '-dpng', '-r0', '-painters');
+
+    save_path2 = strcat(save_path(1:end-4), "_skeletonized_", threshold_title(3:end));
+    exportgraphics(gcf, strcat(save_path2, ".pdf"), 'ContentType', 'vector');
     saveas(gcf, save_path2);
     close(F1);
 end
