@@ -37,7 +37,7 @@ addpath('helper_scripts');
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images & result directory
 
-result_path = 'results/240723_151912';
+result_path = 'results/240723_155715';
 
 % Parameters for skeletonization (median-filter & Frangi-filter)
 median_filter_size = 5;
@@ -127,9 +127,11 @@ end
 window_size = 20;
 smoothed_array = movmean(num_segments_array, window_size);
 
-% Calculate the position of the CLD (maximum number of unconnected capillary loops)
-[~, max_idx] = max(smoothed_array);
-CLD_depth = max_idx;
+% Calculate the position of the CLD (maximum number of unconnected
+% capillary loops) in first half of image
+[~,locs,~,p] = findpeaks(smoothed_array(1:round(depth/2)));
+[~, p_idx] = max(p);
+CLD_depth = locs(p_idx);
 
 % Calculate the position of the SPD (depth position where vessel network is fully
 % connected, i.e. the gradient of the curve of independent segments vs depth reaches 0)
@@ -145,8 +147,8 @@ if isempty(SPD_depth) || isempty(CLD_depth)
 end
 
 % Adapt metrics to micron-scale
-CLD_depth_um = round((CLD_depth-1) * pixel_size, 1);
-SPD_depth_um = round((SPD_depth-1) * pixel_size, 1);
+CLD_depth_um = round((CLD_depth-1) .* pixel_size, 1);
+SPD_depth_um = round((SPD_depth-1) .* pixel_size, 1);
 depth_in_microns = (0:depth-1) * pixel_size;
 
 % Create a graph that plots the number of independent segments per depth slice
