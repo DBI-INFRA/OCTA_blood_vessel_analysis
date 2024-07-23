@@ -39,7 +39,7 @@ AutoCrop = false;
 % Value between [0, 1] to control amount of end-cropping for the OCT stack. 
 % 0 means more data will be kept and 1 means more data will be cropped. 
 % Can be set to 'None' to prevent cropping from end of dataset
-CropSensitivty = 0.5;
+CropSensitivity = 0.5;
 
 % Wavelet Transform Parameters
 gamma = 10; order = 4; wname = 'db20'; reps = 2; orient = 'both'; dim = 3;
@@ -75,7 +75,7 @@ for ff = 1:length(filelist)
     OCTStack = tiffreadVolume(img_path);
     OCTStack = OCTStack(:,:,:,1);
     if AutoCrop
-        [CroppedOCTStack, crop_range] = AutoCropOCTStack(OCTStack, CropSensitivty);
+        [CroppedOCTStack, crop_range] = AutoCropOCTStack(OCTStack, CropSensitivity);
         fileslice(ff,:) = crop_range;
     else 
         CroppedOCTStack = OCTStack;
