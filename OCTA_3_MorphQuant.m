@@ -1,5 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%% OCTA Workflow Pipeline 3: Quantification of Blood Vessel Morphology
+%
+
+%%% OCTA Workflow Pipeline 3: Quantification of Blood Vessel Morphology
 %%%%
 %%%% Version:     1.0
 %%%% Date:        16/07/2024
@@ -24,7 +26,10 @@ addpath('helper_scripts');
 
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images
-result_path = 'results/240722_182751';
+result_path = 'results/240723_164211';
+
+% Set to true if you want to test & view different thresholding methods
+test_thresholding_methods = true;
 
 % Parameters for skeletonization (median-filter & Frangi-filter)
 save_skeleton = true;
@@ -36,15 +41,22 @@ SPD_range_um = 30;
 fileList    = dir(fullfile(result_path, "1_AlignedImages", "*.tif*"));
 params_path = fullfile(result_path, 'InputParameters.mat');
 load(params_path);
+
+if test_thresholding_methods
+    thresholding.method = "test_all";
+end
+
 SPD_range   = round(SPD_range_um/pixel_size(3));
 img_reso    = pixel_size(1:2);
 imgInfo     = readtable(fullfile(result_path, 'ImageSummary.csv'), 'ReadRowNames',true);
 
-num_images = length(fileList);
+num_images    = length(fileList);
 meanDiameter  = zeros(num_images, 1);
 meanLength    = zeros(num_images, 1);
 meanDensity   = zeros(num_images, 1);
 fracDimension = zeros(num_images, 1);
+readErrorIdx  = cell(num_images, 2);
+[readErrorIdx{:, 1}] = deal(false);
 
 skeleton_result_path = fullfile(result_path, '3_MIP_skeletonization_results');
 
@@ -52,7 +64,7 @@ if save_skeleton && ~isfolder(skeleton_result_path)
     mkdir(skeleton_result_path);
 end
 
-% Add new user parameters to parameters table
+% Add new user parameters to parameters table and save to csv file
 save(params_path, "SPD_range_um", "-append");
 table_path = fullfile(result_path, 'InputParameters.csv');
 params_value = [{pixel_size}; {SPD_range_um}; struct2cell(preprocess_opts); ...
@@ -70,10 +82,29 @@ for ff = 1:length(fileList)
     % 1) Parse image information
     img_path   = fullfile(fileList(ff).folder, fileList(ff).name);
     SPD_frame  = imgInfo{fileList(ff).name, 'SPD_Frame'};
+    if isnan(SPD_frame)
+        meanDiameter(ff)    = NaN;
+        meanLength(ff)      = NaN;
+        meanDensity(ff)     = NaN;
+        fracDimension(ff)   = NaN;
+
+        readErrorIdx{ff, 1} = true;
+        readErrorIdx{ff, 2} = NaN;
+        continue
+    end
+    
     SPD_slices = [SPD_frame-SPD_range, SPD_frame+SPD_range];
 
     % Read image around SPD depth
-    ImageStack = tiffreadVolume(img_path, 'PixelRegion', {[1 inf], [1 inf], SPD_slices});
+    try
+        ImageStack = tiffreadVolume(img_path, 'PixelRegion', {[1 inf], [1 inf], SPD_slices});
+    catch
+        ImageStack = tiffreadVolume(img_path, 'PixelRegion', {[1 inf], [1 inf]});
+        
+        SPD_slices(2) = size(ImageStack, 3);
+        readErrorIdx{ff, 1} = true; 
+        readErrorIdx{ff, 2} = [SPD_slices, diff(SPD_slices)*pixel_size(3)];
+    end
     
     % Create mean-intensity-projection and skeletonize image
     StackMIP = mean(ImageStack, 3);
@@ -108,6 +139,14 @@ for ff = 1:length(fileList)
 end
 
 % ================= Write results to file =================================
+% Printout warnings for files where error occured
+warningHead = {"The following files had errors in their SPD detection", "Frames read as SPD (NaN or start_frame, stop_frame, depth(um))"};
+warningIdx  = [readErrorIdx{:, 1}];
+warningBody = [{fileList(warningIdx).name}', readErrorIdx(warningIdx, 2)];
+warningLog  = [warningHead; warningBody];
+writecell(warningLog, fullfile(result_path, 'WarningLog.txt'))
+
+% Morphology calculations
 morphTable = table(meanDiameter, meanLength, meanDensity, fracDimension);
 morphTable.Properties.RowNames = {fileList.name};
 morphTable.Properties.VariableNames ...

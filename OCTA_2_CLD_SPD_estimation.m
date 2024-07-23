@@ -36,7 +36,7 @@ addpath('helper_scripts');
 
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images & result directory
-result_path = 'results/240723_120342';
+result_path = 'results/240723_155715';
 
 % Parameters for skeletonization (median-filter & Frangi-filter)
 median_filter_size = 5;
@@ -75,10 +75,16 @@ SPD_depths = zeros(height(imgInfo), 1);
 fprintf("ESTIMATE THE CLD-DEPTH & SPD-DEPTH:\n")
 for ff = 1:length(fileList)
     image_path = fullfile(fileList(ff).folder, fileList(ff).name);
-    [CLD_depth, SPD_depth] = CLD_SPD_Estimation(image_path, median_filter_size, frangi_opts, thresholding, CLD_SPD_result_path, fileList(ff).name, pixel_size(3));
+    [CLD_depth, SPD_depth] = CLD_SPD_Estimation(result_path, image_path, median_filter_size, frangi_opts, thresholding, CLD_SPD_result_path, fileList(ff).name, pixel_size(3));
     CLD_depths(ff) = CLD_depth;
     SPD_depths(ff) = SPD_depth;
-    fprintf("  Image: <%s>:  CLD_depth = %d,  SPD_depth = %d\n", fileList(ff).name, CLD_depth, SPD_depth);
+    CLD_depth_um = (CLD_depth-1)*pixel_size(3);
+    if ~isnan(SPD_depth)
+        SPD_depth_um = (SPD_depth-1)*pixel_size(3);
+    else
+        SPD_depth_um = NaN;
+    end
+    fprintf("  Image: <%s>:  CLD_depth = %.1f,  SPD_depth = %.1f\n", fileList(ff).name, CLD_depth_um, SPD_depth_um);
 end
 
 % Add the CLD- & SPD-depth info as a new column to the table
@@ -95,7 +101,7 @@ fprintf("\nOCTA Script 2: Estimation of CLD-depth & SPD-depth DONE\n");
 
 % ================= Function for CLD- & SPD-depth estimation ==============
 %% CLD-depth & SPD-depth Estimation
-function [CLD_depth, SPD_depth] = CLD_SPD_Estimation(image_path, median_filter_size, frangi_opts, thresholding, CLD_SPD_result_path, img_name, pixel_size)
+function [CLD_depth, SPD_depth] = CLD_SPD_Estimation(result_path, image_path, median_filter_size, frangi_opts, thresholding, CLD_SPD_result_path, img_name, pixel_size)
 
 % Load the selected image
 image = tiffreadVolume(image_path);
@@ -126,9 +132,11 @@ end
 window_size = 20;
 smoothed_array = movmean(num_segments_array, window_size);
 
-% Calculate the position of the CLD (maximum number of unconnected capillary loops)
-[~, max_idx] = max(smoothed_array);
-CLD_depth = max_idx;
+% Calculate the position of the CLD (maximum number of unconnected
+% capillary loops) in first half of image
+[~,locs,~,p] = findpeaks(smoothed_array(1:round(depth/2)));
+[~, p_idx] = max(p);
+CLD_depth = locs(p_idx);
 
 % Calculate the position of the SPD (depth position where vessel network is fully
 % connected, i.e. the gradient of the curve of independent segments vs depth reaches 0)
@@ -139,41 +147,61 @@ min_grad_idx = CLD_depth + min_grad_idx;
 SPD_depth = find(smoothed_gradient(min_grad_idx:end) >= 0, 1, 'first') + min_grad_idx;
 
 % Check if any errors occured for the estimation of the CLD & SPD depth
-if isempty(SPD_depth) || isempty(CLD_depth) 
-    error('CLD depth or SPD_depth is empty. Please check if the input is correct');
+if isempty(SPD_depth)
+    [~, img_name, ~] = fileparts(image_path);
+    fprintf('  ERROR: SPD depth is empty for image: <%s>\n', img_name);
+    % Check if the error log file already exists - if not, create a new file
+    SPD_error_filepath = fullfile(result_path, 'SPD_not_found.txt');
+    if exist(SPD_error_filepath) == 2
+        fid = fopen(SPD_error_filepath, 'a');
+    else
+        fid = fopen(SPD_error_filepath, 'w');
+        fprintf(fid, ['ERROR: SPD_depth could not be calculated, please ' ...
+            'manually select the SPD depth and save it into ImageSummary.csv. ' ...
+            '\nThe SPD could not be calculated for the following images:\n\n']);
+    end
+    fprintf(fid, '%s\n', img_name);
+    fclose(fid);
+
+    % Set SPD-depth to NaN for manual correction
+    SPD_depth = NaN;
 end
 
 % Adapt metrics to micron-scale
-CLD_depth_um = round((CLD_depth-1) * pixel_size, 1);
-SPD_depth_um = round((SPD_depth-1) * pixel_size, 1);
+CLD_depth_um = round((CLD_depth-1) .* pixel_size, 1);
+SPD_depth_um = round((SPD_depth-1) .* pixel_size, 1);
 depth_in_microns = (0:depth-1) * pixel_size;
 
 % Create a graph that plots the number of independent segments per depth slice
 figure;
 subplot(2, 1, 1);  % Subplot for original data
 plot(depth_in_microns, num_segments_array, '-', 'LineWidth', 1.5);
-xlabel('Depth');
+xlabel('Depth in microns');
 ylabel('#Independent segments');
 title('Original Data');
 grid on;
 hold on; % Adding annotations
 plot(CLD_depth_um, num_segments_array(CLD_depth), 'ro', 'MarkerSize', 10);
 text(CLD_depth_um, num_segments_array(CLD_depth), sprintf('  CLD depth: %.1f', CLD_depth_um), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
-plot(SPD_depth_um, num_segments_array(SPD_depth), 'ro', 'MarkerSize', 10);
-text(SPD_depth_um, num_segments_array(SPD_depth), sprintf('  SPD depth: %.1f', SPD_depth_um), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
+if ~isnan(SPD_depth)
+    plot(SPD_depth_um, num_segments_array(SPD_depth), 'ro', 'MarkerSize', 10);
+    text(SPD_depth_um, num_segments_array(SPD_depth), sprintf('  SPD depth: %.1f', SPD_depth_um), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
+end
 hold off;
 
 subplot(2, 1, 2);  % Subplot for smoothed data
 plot(depth_in_microns, smoothed_array, '-', 'LineWidth', 1.5);
-xlabel('Depth');
+xlabel('Depth in microns');
 ylabel('#Independent segments');
 title(['Smoothed Data (Window Size: ', num2str(window_size), ')']);
 grid on;
 hold on; % Adding annotations
 plot(CLD_depth_um, smoothed_array(CLD_depth), 'ro', 'MarkerSize', 10);
 text(CLD_depth_um, smoothed_array(CLD_depth), sprintf('  CLD depth: %.1f', CLD_depth_um), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
-plot(SPD_depth_um, smoothed_array(SPD_depth), 'ro', 'MarkerSize', 10);
-text(SPD_depth_um, smoothed_array(SPD_depth), sprintf('  SPD depth: %.1f', SPD_depth_um), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
+if ~isnan(SPD_depth)
+    plot(SPD_depth_um, smoothed_array(SPD_depth), 'ro', 'MarkerSize', 10);
+    text(SPD_depth_um, smoothed_array(SPD_depth), sprintf('  SPD depth: %.1f', SPD_depth_um), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
+end
 hold off;
 
 [~, fileName, ~] = fileparts(img_name);
