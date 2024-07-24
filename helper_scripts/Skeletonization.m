@@ -136,7 +136,7 @@ if VISUALIZE
     subplot(1,4,1); imshow(image_median./255); title('1. Median filtering');
     subplot(1,4,2); imshow(image_frangi); title('2. Frangi filtering');
     if strcmp(thresholding.method, 'otsu_thresholding') || strcmp(thresholding.method, 'fuzzy_thresholding')
-        threshold_title = char(strcat('3. ', char(thresholding.method)));
+        threshold_title = char(strcat('3. ', char(strrep(thresholding.method, "_", " "))));
     elseif strcmp(thresholding.method, 'local_adaptive_thresholding')
         threshold_title = char(strcat("3. Adaptive thresholding, s=", strrep(num2str(thresholding.sensitivity), ".", ",")));
     else  % if "test_all" or a non-existing method was selected, use the default
