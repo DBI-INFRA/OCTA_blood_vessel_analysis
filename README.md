@@ -6,6 +6,7 @@ Automated analysis of blood vessel morphology using angiographic optical coheren
 - Curve Fitting Toolbox
 - Wavelet Toolbox
 - Deep Learning Toolbox
+- Signal Processing Toolbox
 
 ## Usage
 This package consists of three pipelines for performing OCTA analysis.
