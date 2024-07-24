@@ -50,8 +50,6 @@ gamma = 10; order = 4; wname = 'db20'; reps = 2; orient = 'both'; dim = 3;
 filelist  = dir(fullfile(input_dir, '*.tif*'));
 
 fileslice = ones(length(filelist), 2);
-fileinfo  = cell(length(filelist), 3);
-
 timenow = char(datetime("now"), "yyMMdd_HHmmss");
 output_dir  = fullfile(result_dir, timenow);
 imwrite_dir = fullfile(output_dir, '1_AlignedImages');
@@ -68,8 +66,6 @@ save(params_path, "pixel_size", "preprocess_opts");
 for ff = 1:length(filelist)
     img_path = fullfile(input_dir, filelist(ff).name);
     img_info = imfinfo(img_path);
-    fileinfo(ff,:) = {img_info(1).XResolution, img_info(1).YResolution, ... 
-                      img_info(1).ResolutionUnit};
 
     % 1) Preprocessing steps
     % Read and crop stacks to relevant (non-noise) data
