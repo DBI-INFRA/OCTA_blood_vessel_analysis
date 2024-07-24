@@ -47,6 +47,8 @@ if pad
     image_frangi = image_frangi(padSize+1:end-padSize, padSize+1:end-padSize);
 end
 
+[path, img_name, ~] = fileparts(save_path);
+
 % 2) SEGMENTATION & SKELETONIZATION
 switch thresholding.method
     case 'fuzzy_thresholding'
@@ -59,33 +61,47 @@ switch thresholding.method
         threshold = graythresh(image_frangi);
         binarized_img = imbinarize(image_frangi, threshold);
     case 'test_all'
-        disp("You selected <test_all>. This will generate a plot for " + ...
+        sensitivities_str = sprintf('%.1f, ', thresholding.test_sensitivities);
+        fprintf("  You selected <test_all>. This will generate a plot for " + ...
             "each available thresholding method, including local adaptive " + ...
-            "thresholding with 3 different options for the sensitivity (0.2, 0.4, 0.6)")
+            "thresholding with the following values for the sensitivity: %s\n", ...
+            sensitivities_str);
+        % Test fuzzy & otsu thresholding, set fuzzy tr. result as the default
+        % which is used for the remaining computations
         binarized_img_fuzzy = fuzzy_thresholding(image_frangi, 2, 3) - 1;
+        binarized_img = binarized_img_fuzzy;
         threshold = graythresh(image_frangi);
         binarized_img_otsu = imbinarize(image_frangi, threshold);
-        adaptive_tr1 = adaptthresh(image_frangi, 0.2);
-        binarized_img_ad_tr1 = imbinarize(image_frangi, adaptive_tr1);
-        adaptive_tr2 = adaptthresh(image_frangi, 0.4);
-        binarized_img_ad_tr2 = imbinarize(image_frangi, adaptive_tr2);
-        adaptive_tr3 = adaptthresh(image_frangi, 0.6);
-        binarized_img_ad_tr3 = imbinarize(image_frangi, adaptive_tr3);
-        binarized_img = binarized_img_fuzzy; % Use fuzzy tr. as the default
 
-        if VISUALIZE
+        % Apply adaptive thresholding for each chosen sensitivity value
+        num_sensitivities = numel(thresholding.test_sensitivities);
+        binarized_images_adaptive = cell(1, num_sensitivities);
+        for i = 1:num_sensitivities
+            adaptive_tr = adaptthresh(image_frangi, thresholding.test_sensitivities(i));
+            binarized_images_adaptive{i} = imbinarize(image_frangi, adaptive_tr);
+        end
+        
         % Create figure for different thresholding results
+        if VISUALIZE
+            threshold_res_path = fullfile(path, "Thresholding_Comparision");
+            if ~exist(threshold_res_path, 'dir')
+                mkdir(threshold_res_path);
+            end
             Ft = figure(1);
-            subplot(2,3,1); imshow(image_median./255); title('Median filtered image');
-            subplot(2,3,2); imshow(binarized_img_fuzzy); title('Fuzzy thresholding');
-            subplot(2,3,3); imshow(binarized_img_otsu); title('Otsu thresholding');
-            subplot(2,3,4); imshow(binarized_img_ad_tr1); title('Adaptive local tr., sensitivity = 0.2');
-            subplot(2,3,5); imshow(binarized_img_ad_tr2); title('Adaptive local tr., sensitivity = 0.4');
-            subplot(2,3,6); imshow(binarized_img_ad_tr3); title('Adaptive local tr., sensitivity = 0.6');
-            % Ft.WindowState = 'maximized';
-            save_path2 = strcat(save_path(1:end-4), "_all_thresholding_methods.png");
-            set(Ft, 'PaperPositionMode', 'auto');
-            print(Ft, save_path2, '-dpng', '-r0', '-painters');
+
+            num_rows = ceil((num_sensitivities + 3) / 3);
+            subplot(num_rows, 3, 1); imshow(image_median./255); title('Median filtered image');
+            subplot(num_rows, 3, 2); imshow(binarized_img_fuzzy); title('Fuzzy thresholding');
+            subplot(num_rows, 3, 3); imshow(binarized_img_otsu); title('Otsu thresholding');
+            for i = 1:num_sensitivities
+                subplot(num_rows, 3, i + 3);
+                imshow(binarized_images_adaptive{i});
+                title(sprintf('Adaptive local tr., sensitivity = %.1f', thresholding.test_sensitivities(i)));
+            end
+            
+            % Save results as a matplot-figure
+            save_path2 = fullfile(threshold_res_path, img_name);
+            exportgraphics(gcf, strcat(save_path2, ".pdf"), 'ContentType', 'vector');
             saveas(gcf, save_path2);
             close(Ft);
         end
@@ -101,18 +117,34 @@ end
 % Skeletonize the binary image
 skeletonized_img = bwmorph(binarized_img, 'skel', Inf);
 
+% Save skeleton to result folder
+skeletonization_path = fullfile(path, "Skeletonization");
+if ~exist(skeletonization_path, 'dir')
+    mkdir(skeletonization_path);
+end
+skeletonized_img_path = fullfile(skeletonization_path, strcat(img_name, "_skeleton.tif"));
+imwrite(skeletonized_img, skeletonized_img_path);
 
 if VISUALIZE
     % Display the processed image at the different steps
     F1 = figure(1);
     subplot(1,4,1); imshow(image_median./255); title('1. Median filtering');
     subplot(1,4,2); imshow(image_frangi); title('2. Frangi filtering');
-    subplot(1,4,3); imshow(binarized_img); title('3. Fuzzy thresholding');
+    threshold_title = char(strcat('3. ', char(thresholding.method)));
+    if strcmp(thresholding.method, 'local_adaptive_thresholding')
+        threshold_title = char(strcat("3. Local adaptive thresholding, sensitiviy=", strrep(num2str(thresholding.sensitivity), ".", ",")));
+    elseif strcmp(thresholding.method, 'test_all')
+        threshold_title = char("3. Fuzzy thresholding");
+    end
+    subplot(1,4,3); imshow(binarized_img); title(threshold_title);
     subplot(1,4,4); imshow(skeletonized_img); title('4. Skeletonization');
-    % F1.WindowState = 'maximized';
-    save_path2 = save_path(1:end-4) + "_skeletonized_" + join(struct2array(thresholding), "_") + ".png";
-    set(F1, 'PaperPositionMode', 'auto');
-    print(F1, save_path2, '-dpng', '-r0', '-painters');
+
+    threshold_title_save = char(thresholding.method);
+    if strcmp(thresholding.method, 'local_adaptive_thresholding')
+        threshold_title_save = char(strcat("adaptive_thresholding_s=", strrep(num2str(thresholding.sensitivity), ".", ",")));
+    end
+    save_path2 = strcat(save_path(1:end-4), "_", threshold_title_save);
+    exportgraphics(gcf, strcat(save_path2, ".pdf"), 'ContentType', 'vector');
     saveas(gcf, save_path2);
     close(F1);
 end
