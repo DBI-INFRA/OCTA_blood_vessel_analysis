@@ -2,8 +2,8 @@
 %%%% OCTA Workflow Pipeline 2: Estimation of Capillary Loop Depth (CLD) 
 %%%%                           and Superficial Plexus Depth (SPD)
 %%%%
-%%%% Version:     1.0
-%%%% Date:        16/07/2024
+%%%% Version:     1.1
+%%%% Date:        24/07/2024
 %%%%
 %%%% Authors:     Tricia Loo (DBI-Infra IACF, tricia.loo@sund.ku.dk)
 %%%%              Julia Mertesdorf (DBI-Infra IACF, jume@di.ku.dk)
@@ -53,7 +53,7 @@ frangi_opts.correctionconst2 = 15;
 thresholding.method = "local_adaptive_thresholding";
 
 % The sensitivity of the local adaptive thresholding algorithm (higher values will
-% pick up more of the vessels & smaller vessess, but potentially also more noise)
+% pick up more of the vessels & smaller vessels, but potentially also more noise)
 % Note: This parameter is only relevant if you selected "local_adaptive_thresholding"
 thresholding.sensitivity = 0.3;
 
