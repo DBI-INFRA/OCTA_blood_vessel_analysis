@@ -37,7 +37,7 @@ addpath('helper_scripts');
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images & result directory
 
-result_path = 'results/240724_131626';
+result_path = 'results/240724_142658';
 
 % Parameter to adjust the median filter size (higher values = more smoothing)
 median_filter_size = 5;
@@ -137,8 +137,9 @@ for z = 1:depth
     %fprintf("  Slice %d: #independent segments = %d\n", z, num_segments);
 end
 
-% Smooth the number of segments curve with a moving average filter (in the paper, the window is 20um)
-window_size = 20;
+% Smooth the number of segments curve with a moving average filter 
+% (Note: In the paper, the window is 20um, which corresponds to a z-depth of 8)
+window_size = 8;
 smoothed_array = movmean(num_segments_array, window_size);
 
 % Calculate the position of the CLD (maximum number of unconnected
