@@ -2,8 +2,8 @@
 %%%% OCTA Workflow Pipeline 2: Estimation of Capillary Loop Depth (CLD) 
 %%%%                           and Superficial Plexus Depth (SPD)
 %%%%
-%%%% Version:     1.0
-%%%% Date:        16/07/2024
+%%%% Version:     1.1
+%%%% Date:        24/07/2024
 %%%%
 %%%% Authors:     Tricia Loo (DBI-Infra IACF, tricia.loo@sund.ku.dk)
 %%%%              Julia Mertesdorf (DBI-Infra IACF, jume@di.ku.dk)
@@ -36,17 +36,26 @@ addpath('helper_scripts');
 
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images & result directory
+
 result_path = 'results/240723_201053';
 
-% Parameters for skeletonization (median-filter & Frangi-filter)
+% Parameter to adjust the median filter size (higher values = more smoothing)
 median_filter_size = 5;
+
+% Parameters for the Frangi filter for vessel enhancement
 frangi_opts.sigmarange = [1 6];
-frangi_opts.sigmastepsize = 2;
+frangi_opts.sigmastepsize = 1;
 frangi_opts.correctionconst1 = 0.8;
 frangi_opts.correctionconst2 = 15;
-thresholding.method = "local_adaptive_thresholding"; %"test_all";  % OPTIONS: "fuzzy_thresholding", "local_adaptive_thresholding" "otsu_thresholding"
-                                   %    Note: "test_all" will generate a plot with all different thresholding methods
-thresholding.sensitivity = 0.3;     % The sensitivity of the local adaptive thresholding (higher values will pick up more of the vessels but potentially also more noise)
+
+% The method to apply for thresholding, i.e. dividing the image into foreground (vessels) & background
+% The selectable options are: "local_adaptive_thresholding", "fuzzy_thresholding", "otsu_thresholding"
+thresholding.method = "local_adaptive_thresholding";
+
+% The sensitivity of the local adaptive thresholding algorithm (higher values will
+% pick up more of the vessels & smaller vessels, but potentially also more noise)
+% Note: This parameter is only relevant if you selected "local_adaptive_thresholding"
+thresholding.sensitivity = 0.3;
 
 % ================= Print parameters & parse input ========================
 % Print the selected parameters & image path

@@ -1,8 +1,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% OCTA Workflow Pipeline 1: Preprocessing & Skin-Border Alignment
 %%%%
-%%%% Version:     1.0
-%%%% Date:        16/07/2024
+%%%% Version:     1.1
+%%%% Date:        24/07/2024
 %%%%
 %%%% Authors:     Tricia Loo (DBI-Infra IACF, tricia.loo@sund.ku.dk)
 %%%%              Julia Mertesdorf (DBI-Infra IACF, jume@di.ku.dk)
@@ -21,6 +21,7 @@ addpath('helper_scripts');
 %% ================= User Parameters ======================================
 % Input image directory containing the original OCT images.
 % Note: The image data should be in local drive for fast read/write speed
+
 input_dir = 'sample_data';
 
 % Result directory & optional result

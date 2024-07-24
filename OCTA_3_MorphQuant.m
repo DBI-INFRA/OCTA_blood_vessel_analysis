@@ -1,10 +1,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-
-%%% OCTA Workflow Pipeline 3: Quantification of Blood Vessel Morphology
+%%%% OCTA Workflow Pipeline 3: Quantification of Blood Vessel Morphology
 %%%%
-%%%% Version:     1.0
-%%%% Date:        16/07/2024
+%%%% Version:     1.1
+%%%% Date:        24/07/2024
 %%%%
 %%%% Authors:     Tricia Loo (DBI-Infra IACF, tricia.loo@sund.ku.dk)
 %%%%              Julia Mertesdorf (DBI-Infra IACF, jume@di.ku.dk)
@@ -26,6 +24,7 @@ addpath('helper_scripts');
 
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images
+
 result_path = 'results/240723_201053';
 
 % Set to true if you want to test & view different thresholding methods

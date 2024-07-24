@@ -6,7 +6,7 @@ Automated analysis of blood vessel morphology using angiographic optical coheren
 - Curve Fitting Toolbox
 - Wavelet Toolbox
 - Deep Learning Toolbox
-- Signal Proceessing Toolbox
+- Signal Processing Toolbox
 
 ## Usage and code structures
 
