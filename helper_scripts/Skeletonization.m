@@ -31,7 +31,7 @@ pad = true;
 if pad
     image_orig = image;
     % Define padding size
-    padSize = 10;  % Adjust the padding size as needed
+    padSize = 15;  % Adjust the padding size as needed
     % Pad the image symmetrically
     image = padarray(image_orig, [padSize padSize], 'symmetric');
 end
@@ -44,6 +44,8 @@ image_frangi = frangi_2Dfilter(image_median, frangi_opts);
 
 % Crop back if pad == true
 if pad
+    image = image(padSize+1:end-padSize, padSize+1:end-padSize);
+    image_median = image_median(padSize+1:end-padSize, padSize+1:end-padSize);
     image_frangi = image_frangi(padSize+1:end-padSize, padSize+1:end-padSize);
 end
 
