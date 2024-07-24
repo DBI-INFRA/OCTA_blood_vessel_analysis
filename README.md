@@ -75,6 +75,8 @@ The third section of the pipeline performs quantitative analysis on the output f
 - **`SPD_range_um`**: Depth around the calculated/specified SPD_Depth listed in "ImageSummary.csv" to consider when quantifying vessel morphology, in micrometers. Morphology quantification will then be performed on the mean intensity projection of slices \[SPD_depth-round(SPD_range_um/pixel_size(3)), SPD_depth+round(SPD_range_um/pixel_size(3))], where pixel_size(3) is the voxel size in the z-dimension in microns.
 
 #### Expected Outputs (stored in "`results_dir`/`yyMMdd_HHmmss/`")
-- **"3_MIP_skeletonization_results/"**: Folder of skeletonisation results written as ".fig" and ".pdf" files.
+- **"3_MIP_skeletonization_results/"**: Folder of the visualization of skeletonisation results written as ".fig" and ".pdf" files.
+- **"MorphologyResults.csv"**: A table showing the morphologies of skeletons of each image, including mean diameter, length, vessel density, fractal dimension.
 - **"InputParameters.csv"**: All user input variables saved in "InputParameters.mat" are written out into a .csv file for ease of reading.
+
 - **"WarningLog.txt"**: Text file to log all images where the full SPD range (\[SPD_depth-round(SPD_range_um/pixel_size(3)), SPD_depth+round(SPD_range_um/pixel_size(3))]) cannot be read in, either because the SPD was not found (SPD_frame = "NaN") or because the specified SPD range goes beyond the slices available in the corresponding "1_AlignedImage/" file. In these cases, the user may choose to manually specify an SPD (see expected outputs for "OCTA_2_CLD_SPD_estimation.m") or re-crop the images with "OCTA_1_Preprocessing" with a lower `CropSensitivity` setting, for these specific images with errors.
