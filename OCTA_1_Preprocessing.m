@@ -21,6 +21,7 @@ addpath('helper_scripts');
 %% ================= User Parameters ======================================
 % Input image directory containing the original OCT images.
 % Note: The image data should be in local drive for fast read/write speed
+
 input_dir = 'sample_data';
 
 % Result directory & optional result

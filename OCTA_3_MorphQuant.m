@@ -26,6 +26,7 @@ addpath('helper_scripts');
 
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images
+
 result_path = 'results/240723_201053';
 
 % Set to true if you want to test & view different thresholding methods
