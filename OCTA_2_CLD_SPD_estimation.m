@@ -37,7 +37,7 @@ addpath('helper_scripts');
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images & result directory
 
-result_path = 'results/240723_201053';
+result_path = 'results/240724_131626';
 
 % Parameter to adjust the median filter size (higher values = more smoothing)
 median_filter_size = 5;
