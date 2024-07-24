@@ -1,5 +1,5 @@
 # OCTA_blood_vessel_analysis
-Automated analysis of blood vessel morphology using angiographic optical coherence tomography
+Multi-component pipeline for automated analysis of blood vessel morphology imaged using angiographic optical coherence tomography
 
 ## MATLAB Toolboxes required
 - Fuzzy Logic Toolbox
@@ -10,16 +10,39 @@ Automated analysis of blood vessel morphology using angiographic optical coheren
 
 ## Usage and code structures
 
-This package consists of three pipelines for performing OCTA analysis. The project needs to be run by the three .m files sequentially in the main folder with the name starting with "OCTA_". .m files in the folder ```helper_scripts```inclues helper functions that are called by the the main files.
+This package consists of three "OCTA_...".m scripts in a main folder that needs to be run sequentially, and a subfolder ```helper_scripts``` which includes MATLAB functions that are called by these three main scripts. 
 
-#### OCTA_1_Preprocessing.m
+- **Expected Input**: An entire folder of OCTA images. We provide an additional folder of pre-cropped sample images in the folder ```sample_data``` as an example of expected input. Please keep AutoCrop set to false for these test images, since they have already been cropped for size.
+- **Expected Output**: Each time "OCTA_1_Preprocessing.m" is run, a subfolder with the current date-time in the form of ```yyMMdd_HHmmss``` (e.g., ```240722_154054```) will be created in a chosen result folder ```results_dir```. The pipeline will save all intermediate and final outputs into the subfolder and will also expect to receive intermediate data from the subfolder.
 
-The first part of the OCTA analysis pipeline performs image preprocessing by automatically cropping, filtering and aligning images to the skin-border.
+Detailed usage of the main scripts are given below.
 
-Please make sure all the original images are stored inside the ```sample_data``` folder in the main directory. The result will be saved to the ```results``` folder. However, each time you run the first script, it will generate a subfolder inside the ```results``` folder in the form of ```yyMMdd_HHmm```. e.g., ```240722_154054```.
+**The working directory should be set to the main folder where the three "OCTA_".m files are located.**
+
+### OCTA_1_Preprocessing.m
+
+The first part of the OCTA analysis pipeline performs image preprocessing. For each image in the ```input_dir``` folder, this script will:
+1. (If AutoCrop == true) Crop away slices from the start and the end of the z-stack where the image signal is faint. This is done by taking the mean intensity of each z-plane and calculating an expected background noise from the mean intesntity of the last 10 z-slices. Cropping begins when a local minima is first detected in the mean z-intensity signal, and stops when the mean z-intensity returns to a level close to the background noise (determined by the ```CropSensitivity``` parameter).
+2. Remove motion artefacts slice-by-slice using a wavelet-FFT filter, as described in [Byers et al (2017)](https://doi.org/10.1364%2FBOE.8.004551).
+3. Detect the air-skin border by first finding the peak in the image intensity for each pixel along its z-dimension, then removing outliers greater than the 25th percentile, and finally by applying a 25x25 median filter. The resulting 3D surface was used to axially shift the OCT data in the z-dimension and align the entire image at the air-skin boundary.
+
+*User Input Parameters*
+- input_dir: Path to folder where images to be processed are stored. (Default = )
+- result_dir: Path to folder where all results should be stored. A result subfolder will be automatically created here each time you run this script.
+- pixel_size: \[x, y, z] size of each pixel in micrometers
+- writeZDisplacement: true/false toggle. When set to true, the pipeline will write the z-displacement field (see point 3 above) as a tiff file, which can be used for debugging issues with skin alignment.
+- AutoCrop: true/false toggle. Set to true to automatically crop noisy z-slices away from the dataset (see point 1 above). Set to false for testing the degault ```sample_data``` folder.
+- CropSensitivity: Value between \[0, 1] or 'None', default = 0.5. Controls where the automatic cropping of the image stops, set to 1 to crop away data more agressively and reduce file size; set to 0 for less agressive removal of slices, which may result in larger files and slower processing times later on in the pipeline. Can also be set to 'None' so that AutoCrop will keep data all the way to the end of the image.
+- Wavelet Transform Parameters: Parameters used to remove motion artefacts in the wavelet-FFT filter. (See helper_scripts/SuppWaveletFFT.m for details.)
+
+*Expected Outputs (stored in ```results_dir/```)*
+- ```yyMMdd_HHmmss/1_AlignedImages/```: Folder of all processed images which have been cropped, filtered and aligned. Images written as tiff.
+- ```yyMMdd_HHmmss/1_AlignedImages/Displacement/```: Folder of z-displacement fields (if writeZDisplacement == true), written as tiff.
+- ```yyMMdd_HHmmss/ImageSummary.csv```: List of all images from input_dir folder, with FirstSlice and LastSlice specifying the z-frames used from the original image data.
+- ```yyMMdd_HHmmss/InputParameters.mat```: .mat file storing user input variables, including "pixel_size" and all preprocessing options ("AutoCrop", "CropSensitivity" and all Wavelet Transform Parameters).
 
 
-#### OCTA_2_CLD_SPD_estimation.m
+### OCTA_2_CLD_SPD_estimation.m
 The second part of the pipeline estimates the Capillary Loop Depth (CLD) and Superficial Plexus Depth (SPD) from   z-aligned Optical Coherence Tomography (OCT) images. 
 
 You will need to go to the ```OCTA_2_CLD_SPD_estimation.m``` file and modify the value of ```result_path``` based on the folder generated by the first script. e.g., you might change from
@@ -31,7 +54,8 @@ to
 ```result_path = 'results/240722_172132';```
 
 
-#### OCTA_3_MorphQuant.m
+
+### OCTA_3_MorphQuant.m
 The third section of the pipeline performs quantitative  analysis on the output from previous steps. It calculates various morphological metrics for each image, including the mean vessel diameter, vessel length, vessel density  and fractal dimension. All results are saved in a CSV file.
 
 You will need to do the same as the second step: go to the ```OCTA_3_MorphQuant.m``` file and modify the value of ```result_path``` based on the folder generated by the first script.
