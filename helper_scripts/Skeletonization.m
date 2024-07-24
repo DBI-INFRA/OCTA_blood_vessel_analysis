@@ -66,10 +66,8 @@ switch thresholding.method
             "each available thresholding method, including local adaptive " + ...
             "thresholding with the following values for the sensitivity: %s\n", ...
             sensitivities_str);
-        % Test fuzzy & otsu thresholding, set fuzzy tr. result as the default
-        % which is used for the remaining computations
+        % Apply fuzzy & otsu thresholding
         binarized_img_fuzzy = fuzzy_thresholding(image_frangi, 2, 3) - 1;
-        binarized_img = binarized_img_fuzzy;
         threshold = graythresh(image_frangi);
         binarized_img_otsu = imbinarize(image_frangi, threshold);
 
@@ -96,22 +94,29 @@ switch thresholding.method
             for i = 1:num_sensitivities
                 subplot(num_rows, 3, i + 3);
                 imshow(binarized_images_adaptive{i});
-                title(sprintf('Adaptive local tr., sensitivity = %.1f', thresholding.test_sensitivities(i)));
+                title(sprintf('Adaptive thresholding, s=%.1f', thresholding.test_sensitivities(i)));
             end
             
             % Save results as a matplot-figure
             save_path2 = fullfile(threshold_res_path, img_name);
             exportgraphics(gcf, strcat(save_path2, ".pdf"), 'ContentType', 'vector');
-            saveas(gcf, save_path2);
+            saveas(gcf, strcat(save_path2, '.fig'));
             close(Ft);
         end
 
+        % Set local adaptive thresholding with sensitivity = 0.3 as the 
+        % default, which is used for all of the remaining computations
+        adaptive_tr_def = adaptthresh(image_frangi, 0.3);
+        binarized_img = imbinarize(image_frangi, adaptive_tr_def);
+
     otherwise
-        disp(['The selected thresholding method does not exist. ' ...
-            'Please select one from the following: {fuzzy_thresholding, ' ...
-            'local adaptive thresholding, otsu thresholding}']);
-        disp("Use default method <Fuzzy thresholding> instead");
-        binarized_img = fuzzy_thresholding(image_frangi, 2, 3) - 1;
+        fprintf(['The selected thresholding method <%s> does not exist. ' ...
+            'Please select one from the following: {"fuzzy_thresholding", ' ...
+            '"local adaptive thresholding", "otsu thresholding"}\n'], thresholding.method);
+        disp("Use default method <Local adaptive thresholding> " + ...
+            "with sensitivity = 0.3 instead");
+        adaptive_tr_def = adaptthresh(image_frangi, 0.3);
+        binarized_img = imbinarize(image_frangi, adaptive_tr_def);
 end
 
 % Skeletonize the binary image
@@ -130,22 +135,20 @@ if VISUALIZE
     F1 = figure(1);
     subplot(1,4,1); imshow(image_median./255); title('1. Median filtering');
     subplot(1,4,2); imshow(image_frangi); title('2. Frangi filtering');
-    threshold_title = char(strcat('3. ', char(thresholding.method)));
-    if strcmp(thresholding.method, 'local_adaptive_thresholding')
-        threshold_title = char(strcat("3. Local adaptive thresholding, sensitiviy=", strrep(num2str(thresholding.sensitivity), ".", ",")));
-    elseif strcmp(thresholding.method, 'test_all')
-        threshold_title = char("3. Fuzzy thresholding");
+    if strcmp(thresholding.method, 'otsu_thresholding') || strcmp(thresholding.method, 'fuzzy_thresholding')
+        threshold_title = char(strcat('3. ', char(thresholding.method)));
+    elseif strcmp(thresholding.method, 'local_adaptive_thresholding')
+        threshold_title = char(strcat("3. Adaptive thresholding, s=", strrep(num2str(thresholding.sensitivity), ".", ",")));
+    else  % if "test_all" or a non-existing method was selected, use the default
+        threshold_title = char("3. Adaptive thresholding, s=0.3");
     end
     subplot(1,4,3); imshow(binarized_img); title(threshold_title);
     subplot(1,4,4); imshow(skeletonized_img); title('4. Skeletonization');
 
-    threshold_title_save = char(thresholding.method);
-    if strcmp(thresholding.method, 'local_adaptive_thresholding')
-        threshold_title_save = char(strcat("adaptive_thresholding_s=", strrep(num2str(thresholding.sensitivity), ".", ",")));
-    end
+    threshold_title_save = char(strrep(threshold_title(3:end), " ", "_"));
     save_path2 = strcat(save_path(1:end-4), "_", threshold_title_save);
     exportgraphics(gcf, strcat(save_path2, ".pdf"), 'ContentType', 'vector');
-    saveas(gcf, save_path2);
+    saveas(gcf, strcat(save_path2, '.fig'));
     close(F1);
 end
 end

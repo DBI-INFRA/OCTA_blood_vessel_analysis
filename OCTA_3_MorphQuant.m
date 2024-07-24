@@ -1,10 +1,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-
-%%% OCTA Workflow Pipeline 3: Quantification of Blood Vessel Morphology
+%%%% OCTA Workflow Pipeline 3: Quantification of Blood Vessel Morphology
 %%%%
-%%%% Version:     1.0
-%%%% Date:        16/07/2024
+%%%% Version:     1.1
+%%%% Date:        24/07/2024
 %%%%
 %%%% Authors:     Tricia Loo (DBI-Infra IACF, tricia.loo@sund.ku.dk)
 %%%%              Julia Mertesdorf (DBI-Infra IACF, jume@di.ku.dk)
@@ -27,7 +25,7 @@ addpath('helper_scripts');
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images
 
-result_path = 'results/240723_201053';
+result_path = 'results/240724_131626';
 
 % Set to true if you want to test & view different thresholding methods
 test_thresholding_methods = false;
@@ -36,6 +34,7 @@ test_thresholding_methods = false;
 % thresholding with each different sensitivity parameter, and create a new
 % subplot for each version that can be found under the following path:
 % <3_MIP_skeletonization_results/Thresholding_Comparision>
+% Note: If test_thresholding is enabled, this script will 
 local_adaptive_thresholding_sensitivities = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6];
 
 % Parameters for skeletonization (median-filter & Frangi-filter)
