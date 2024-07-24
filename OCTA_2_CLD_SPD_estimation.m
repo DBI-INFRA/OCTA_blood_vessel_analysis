@@ -36,15 +36,15 @@ addpath('helper_scripts');
 
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images & result directory
-result_path = 'results/240723_155715';
+result_path = 'results/combinedset';
 
 % Parameters for skeletonization (median-filter & Frangi-filter)
 median_filter_size = 5;
 frangi_opts.sigmarange = [1 6];
-frangi_opts.sigmastepsize = 2;
+frangi_opts.sigmastepsize = 1;
 frangi_opts.correctionconst1 = 0.8;
 frangi_opts.correctionconst2 = 15;
-thresholding.method = "local_adaptive_thresholding"; %"test_all";  % OPTIONS: "fuzzy_thresholding", "local_adaptive_thresholding" "otsu_thresholding"
+thresholding.method = "fuzzy_thresholding"; %"test_all";  % OPTIONS: "fuzzy_thresholding", "local_adaptive_thresholding" "otsu_thresholding"
                                    %    Note: "test_all" will generate a plot with all different thresholding methods
 thresholding.sensitivity = 0.3;     % The sensitivity of the local adaptive thresholding (higher values will pick up more of the vessels but potentially also more noise)
 

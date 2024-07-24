@@ -26,7 +26,7 @@ addpath('helper_scripts');
 
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images
-result_path = 'results/240723_155715';
+result_path = 'results/240723_171043';
 
 % Parameters for skeletonization (median-filter & Frangi-filter)
 save_skeleton = true;
