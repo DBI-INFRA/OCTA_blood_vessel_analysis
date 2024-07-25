@@ -23,7 +23,7 @@ Detailed usage of the main scripts are given below.
 ### OCTA_1_Preprocessing.m
 
 The first part of the OCTA analysis pipeline performs image preprocessing. For each image in the `input_dir` folder, this script will:
-1. (If `AutoCrop == true`) Crop away slices from the start and the end of the z-stack where the image signal is faint. This is done by taking the mean intensity of each z-plane and calculating an expected background noise from the mean intesntity of the last 10 z-slices. Cropping begins when a local minima is first detected in the mean z-intensity signal, and stops when the mean z-intensity returns to a level close to the background noise (determined by the `CropSensitivity` parameter).
+1. (If `AutoCrop == true`) Crop away slices from the start and the end of the z-stack where the image signal is faint. This is done by taking the mean intensity of each z-plane and calculating an expected background noise from the mean intensity of the last 10 z-slices. Cropping begins when a local minima is first detected in the mean z-intensity signal, and stops when the mean z-intensity returns to a level close to the background noise (determined by the `CropSensitivity` parameter).
 2. Remove motion artefacts slice-by-slice using a wavelet-FFT filter, as described in [Byers et al. (2017)](https://doi.org/10.1364%2FBOE.8.004551).
 3. Detect the air-skin border by first finding the peak in the image intensity for each pixel along its z-dimension, then removing outliers greater than the 25th percentile, and finally by applying a 25x25 median filter. The resulting 3D surface was used to axially shift the OCT data in the z-dimension and align the entire image at the air-skin boundary.
 
