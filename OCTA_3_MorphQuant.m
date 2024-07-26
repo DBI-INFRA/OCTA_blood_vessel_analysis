@@ -34,6 +34,8 @@ test_thresholding_methods = false;
 % thresholding with each different sensitivity parameter, and create a new
 % subplot for each version that can be found under the following path:
 % <3_MIP_skeletonization_results/Thresholding_Comparision>
+% Note: If test_thresholding is enabled, this script will apply local
+% adaptive thresholding with sensitivity=0.3 as the default
 local_adaptive_thresholding_sensitivities = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6];
 
 % Parameters for skeletonization (median-filter & Frangi-filter)

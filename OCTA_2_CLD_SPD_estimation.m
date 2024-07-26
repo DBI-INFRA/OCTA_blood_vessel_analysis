@@ -152,7 +152,11 @@ end
 num_segments_array = num_segments_array(SPD_range+1: end-SPD_range);
 
 % Smooth the number of segments curve with a moving average filter (in the paper, the window is 20um)
-window_size = 20;
+% window_size = 20;
+% Smooth the number of segments curve with a moving average filter 
+% (Note: In the paper, the window is 20um, which corresponds to a z-depth of 8)
+
+window_size = round(20 / pixel_size);
 smoothed_array = movmean(num_segments_array, window_size);
 
 % Calculate the position of the CLD (maximum number of unconnected
