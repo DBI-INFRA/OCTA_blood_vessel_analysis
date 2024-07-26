@@ -25,7 +25,7 @@ addpath('helper_scripts');
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images
 
-result_path = 'results/240724_131626';
+result_path = 'results/240725_163245';
 
 % Set to true if you want to test & view different thresholding methods
 test_thresholding_methods = false;
@@ -48,6 +48,12 @@ SPD_range_um = 30;
 fileList    = dir(fullfile(result_path, "1_AlignedImages", "*.tif*"));
 params_path = fullfile(result_path, 'InputParameters.mat');
 load(params_path);
+
+
+% ================= The below parameters are set different from OCTA_2 and OCTA_3 ===================
+thresholding.sensitivity = 0.3;
+% thresholding.opening_size = 0;
+
 
 if test_thresholding_methods
     thresholding.method = "test_all";
@@ -122,6 +128,8 @@ for ff = 1:length(fileList)
     StackMIP = double(int16(squeeze(StackMIP)));
     save_path = fullfile(skeleton_result_path, fileList(ff).name);
     [skeleton, binary_img] = Skeletonization(StackMIP, median_filter_size, frangi_opts, thresholding, save_skeleton, save_path);
+    
+    imwrite(binary_img, strcat(save_path, '_binary.png'))
 
     % 2) Quantify the blood vessel network morphology
     % Average Vessel Diameter in um
