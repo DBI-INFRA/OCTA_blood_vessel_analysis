@@ -44,6 +44,9 @@ save_skeleton = true;
 % Parameter for the depth range around the estimated SPD in microns
 SPD_range_um = 30;
 
+% thresholding sensitivity
+thresholding_sensitivity = 0.3;
+
 % ================= Parse input and preallocate storage ===================
 fileList    = dir(fullfile(result_path, "1_AlignedImages", "*.tif*"));
 params_path = fullfile(result_path, 'InputParameters.mat');
@@ -51,7 +54,7 @@ load(params_path);
 
 
 % ================= The below parameters are set different from OCTA_2 and OCTA_3 ===================
-thresholding.sensitivity = 0.3;
+thresholding.sensitivity = thresholding_sensitivity;
 % thresholding.opening_size = 0;
 
 

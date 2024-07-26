@@ -56,7 +56,11 @@ thresholding.method = "local_adaptive_thresholding";
 % pick up more of the vessels & smaller vessels, but potentially also more noise)
 % Note: This parameter is only relevant if you selected "local_adaptive_thresholding"
 % thresholding.sensitivity = 0.3;
+
+% note that this parameter is only for script #2
 thresholding.sensitivity = 0;
+% opening will remove some islands after binarization, based on the area
+% size (in pixels), adjust if necessary
 thresholding.opening_size = 75;
 
 % ================= Print parameters & parse input ========================
