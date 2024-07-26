@@ -44,19 +44,26 @@ save_skeleton = true;
 % Parameter for the depth range around the estimated SPD in microns
 SPD_range_um = 30;
 
-% thresholding sensitivity
+% The method to apply for thresholding, i.e. dividing the image into foreground (vessels) & background
+% The selectable options are: "local_adaptive_thresholding", "fuzzy_thresholding", "otsu_thresholding"
+thresholding_method = "local_adaptive_thresholding";
+
+% The sensitivity of the local adaptive thresholding algorithm (higher values will
+% pick up more & smaller vessels, but potentially also more noise).
 thresholding_sensitivity = 0.3;
+
 
 % ================= Parse input and preallocate storage ===================
 fileList    = dir(fullfile(result_path, "1_AlignedImages", "*.tif*"));
 params_path = fullfile(result_path, 'InputParameters.mat');
 load(params_path);
 
-
 % ================= The below parameters are set different from OCTA_2 and OCTA_3 ===================
 thresholding.sensitivity = thresholding_sensitivity;
-% thresholding.opening_size = 0;
+thresholding.method = thresholding_method;
 
+% If you want to disable morphological opening, uncomment the following line
+% thresholding.opening_size = 0; 
 
 if test_thresholding_methods
     thresholding.method = "test_all";
