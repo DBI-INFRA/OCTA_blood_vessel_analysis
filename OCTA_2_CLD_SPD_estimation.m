@@ -184,7 +184,7 @@ if isempty(SPD_depth)
             '\nThe SPD could not be calculated for the following images:\n\n']);
     end
     fprintf(fid, '%s\n', img_name);
-    fclose(fid);
+    fclose(fid);r
 
     % Set SPD-depth to NaN for manual correction
     SPD_depth = NaN;
