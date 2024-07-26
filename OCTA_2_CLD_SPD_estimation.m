@@ -37,7 +37,7 @@ addpath('helper_scripts');
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images & result directory
 
-result_path = 'results/240723_201053';
+result_path = 'results/240725_163245';
 
 % Parameter to adjust the median filter size (higher values = more smoothing)
 median_filter_size = 5;
@@ -46,7 +46,7 @@ median_filter_size = 5;
 frangi_opts.sigmarange = [1 6];
 frangi_opts.sigmastepsize = 1;
 frangi_opts.correctionconst1 = 0.8;
-frangi_opts.correctionconst2 = 15;
+frangi_opts.correctionconst2 = 15; 
 
 % The method to apply for thresholding, i.e. dividing the image into foreground (vessels) & background
 % The selectable options are: "local_adaptive_thresholding", "fuzzy_thresholding", "otsu_thresholding"
@@ -55,7 +55,9 @@ thresholding.method = "local_adaptive_thresholding";
 % The sensitivity of the local adaptive thresholding algorithm (higher values will
 % pick up more of the vessels & smaller vessels, but potentially also more noise)
 % Note: This parameter is only relevant if you selected "local_adaptive_thresholding"
-thresholding.sensitivity = 0.3;
+% thresholding.sensitivity = 0.3;
+thresholding.sensitivity = 0;
+thresholding.opening_size = 75;
 
 % ================= Print parameters & parse input ========================
 % Print the selected parameters & image path
@@ -114,6 +116,7 @@ function [CLD_depth, SPD_depth] = CLD_SPD_Estimation(result_path, image_path, me
 
 % Load the selected image
 image = tiffreadVolume(image_path);
+[~, fileName, ~] = fileparts(img_name);
 
 % Convert pixels to range [0, 255]
 if max(image(:)) <= 1
@@ -126,16 +129,27 @@ image = double(int16(squeeze(image)));
 depth = size(image, 3);
 num_segments_array = zeros(1, depth);
 VISUALIZE = false;
-for z = 1:depth
-    depth_slice = image(:, :, z);
-    [skeletonized_slice, ~] = Skeletonization(depth_slice, median_filter_size, frangi_opts, thresholding, VISUALIZE, "none");
 
+SPD_range_um = 10;
+SPD_range   = round(SPD_range_um/pixel_size);
+
+for z = 1+SPD_range: depth-SPD_range
+    
+    % depth_slice = image(:, :, z);
+
+    depth_slice = mean(image(:, :, z-SPD_range: z+SPD_range), 3);
+
+    [skeletonized_slice, ~] = Skeletonization(depth_slice, median_filter_size, frangi_opts, thresholding, VISUALIZE, "none");
     % Find connected segments & count the number of independent segments
     segments = bwconncomp(skeletonized_slice);
     num_segments = segments.NumObjects;
     num_segments_array(z) = num_segments;
     %fprintf("  Slice %d: #independent segments = %d\n", z, num_segments);
 end
+
+% imwrite(skeleton_results_image, skeleton_results_image_path); 
+
+num_segments_array = num_segments_array(SPD_range+1: end-SPD_range);
 
 % Smooth the number of segments curve with a moving average filter (in the paper, the window is 20um)
 window_size = 20;
@@ -176,10 +190,19 @@ if isempty(SPD_depth)
     SPD_depth = NaN;
 end
 
+CLD_depth = CLD_depth + SPD_range;
+if ~isnan(SPD_depth)
+    SPD_depth = SPD_depth + SPD_range;
+end
+
 % Adapt metrics to micron-scale
 CLD_depth_um = round((CLD_depth-1) .* pixel_size, 1);
 SPD_depth_um = round((SPD_depth-1) .* pixel_size, 1);
 depth_in_microns = (0:depth-1) * pixel_size;
+
+
+num_segments_array = [ones(1, SPD_range) * num_segments_array(1), num_segments_array, ones(1, SPD_range) * num_segments_array(end)];
+smoothed_array = [ones(1, SPD_range) * smoothed_array(1), smoothed_array, ones(1, SPD_range) * smoothed_array(end)];
 
 % Create a graph that plots the number of independent segments per depth slice
 figure;
@@ -213,7 +236,6 @@ if ~isnan(SPD_depth)
 end
 hold off;
 
-[~, fileName, ~] = fileparts(img_name);
 saveas(gcf, fullfile(CLD_SPD_result_path, strcat(img_name, '_Independent_segments_per_depth_graph.png')));
 close
 

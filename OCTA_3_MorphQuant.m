@@ -25,7 +25,7 @@ addpath('helper_scripts');
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images
 
-result_path = 'results/240723_201053';
+result_path = 'results/240725_105834';
 
 % Set to true if you want to test & view different thresholding methods
 test_thresholding_methods = false;
@@ -46,6 +46,12 @@ SPD_range_um = 30;
 fileList    = dir(fullfile(result_path, "1_AlignedImages", "*.tif*"));
 params_path = fullfile(result_path, 'InputParameters.mat');
 load(params_path);
+
+
+% ================= The below parameters are set different from OCTA_2 and OCTA_3 ===================
+thresholding.sensitivity = 0.3;
+thresholding.opening_size = 0;
+
 
 if test_thresholding_methods
     thresholding.method = "test_all";

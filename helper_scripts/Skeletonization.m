@@ -31,7 +31,7 @@ pad = true;
 if pad
     image_orig = image;
     % Define padding size
-    padSize = 15;  % Adjust the padding size as needed
+    padSize = 20;  % Adjust the padding size as needed
     % Pad the image symmetrically
     image = padarray(image_orig, [padSize padSize], 'symmetric');
 end
@@ -116,7 +116,10 @@ switch thresholding.method
         binarized_img = fuzzy_thresholding(image_frangi, 2, 3) - 1;
 end
 
-% Skeletonize the binary image
+if thresholding.opening_size > 0
+    binarized_img = bwareaopen(binarized_img, thresholding.opening_size);
+end
+
 skeletonized_img = bwmorph(binarized_img, 'skel', Inf);
 
 % Save skeleton to result folder
