@@ -143,7 +143,7 @@ if VISUALIZE
     if strcmp(thresholding.method, 'otsu_thresholding') || strcmp(thresholding.method, 'fuzzy_thresholding')
         threshold_title = char(strcat('3. ', char(strrep(thresholding.method, "_", " "))));
     elseif strcmp(thresholding.method, 'local_adaptive_thresholding')
-        threshold_title = char(strcat("3. Adaptive thresholding, s=", strrep(num2str(thresholding.sensitivity), ".", ",")));
+        threshold_title = char(strcat("3. Adaptive thresholding, s=", num2str(thresholding.sensitivity)));
     else  % if "test_all" or a non-existing method was selected, use the default
         threshold_title = char("3. Adaptive thresholding, s=0.3");
     end

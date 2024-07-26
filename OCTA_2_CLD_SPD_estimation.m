@@ -2,8 +2,8 @@
 %%%% OCTA Workflow Pipeline 2: Estimation of Capillary Loop Depth (CLD) 
 %%%%                           and Superficial Plexus Depth (SPD)
 %%%%
-%%%% Version:     1.1
-%%%% Date:        24/07/2024
+%%%% Version:     1.2
+%%%% Date:        26/07/2024
 %%%%
 %%%% Authors:     Tricia Loo (DBI-Infra IACF, tricia.loo@sund.ku.dk)
 %%%%              Julia Mertesdorf (DBI-Infra IACF, jume@di.ku.dk)
@@ -37,7 +37,7 @@ addpath('helper_scripts');
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images & result directory
 
-result_path = 'results/240725_163245';
+result_path = 'results/240726_155559';
 
 % Parameter to adjust the median filter size (higher values = more smoothing)
 median_filter_size = 5;

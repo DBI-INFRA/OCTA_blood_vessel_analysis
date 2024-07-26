@@ -1,8 +1,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% OCTA Workflow Pipeline 3: Quantification of Blood Vessel Morphology
 %%%%
-%%%% Version:     1.1
-%%%% Date:        24/07/2024
+%%%% Version:     1.2
+%%%% Date:        26/07/2024
 %%%%
 %%%% Authors:     Tricia Loo (DBI-Infra IACF, tricia.loo@sund.ku.dk)
 %%%%              Julia Mertesdorf (DBI-Infra IACF, jume@di.ku.dk)
@@ -25,7 +25,7 @@ addpath('helper_scripts');
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images
 
-result_path = 'results/240725_163245';
+result_path = 'results/240726_155559';
 
 % Set to true if you want to test & view different thresholding methods
 test_thresholding_methods = false;
@@ -139,7 +139,7 @@ for ff = 1:length(fileList)
     save_path = fullfile(skeleton_result_path, fileList(ff).name);
     [skeleton, binary_img] = Skeletonization(StackMIP, median_filter_size, frangi_opts, thresholding, save_skeleton, save_path);
     
-    imwrite(binary_img, strcat(save_path, '_binary.png'))
+    %imwrite(binary_img, strcat(save_path, '_binary.png'))
 
     % 2) Quantify the blood vessel network morphology
     % Average Vessel Diameter in um
