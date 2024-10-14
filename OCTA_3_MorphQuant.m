@@ -25,7 +25,13 @@ addpath('helper_scripts');
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images
 
-result_path = 'results/240726_155559';
+result_path = 'results/240730_170157';
+
+% Manually set to the SPD frame number if you already have the number, otherwise
+% leave it to -1 so that it will be inferred from the previous step. Note
+% that it is in the number of frame, not number of micro-meters
+
+SPD_frame = -1;
 
 % Set to true if you want to test & view different thresholding methods
 test_thresholding_methods = false;
@@ -105,18 +111,21 @@ for ff = 1:length(fileList)
     
     % 1) Parse image information
     img_path   = fullfile(fileList(ff).folder, fileList(ff).name);
-    SPD_frame  = imgInfo{fileList(ff).name, 'SPD_Frame'};
-    if isnan(SPD_frame)
-        meanDiameter(ff)    = NaN;
-        meanLength(ff)      = NaN;
-        meanDensity(ff)     = NaN;
-        fracDimension(ff)   = NaN;
 
-        readErrorIdx{ff, 1} = true;
-        readErrorIdx{ff, 2} = NaN;
-        continue
-    end
+    if (SPD_frame == -1)
+        SPD_frame  = imgInfo{fileList(ff).name, 'SPD_Frame'};
+        if isnan(SPD_frame)
+            meanDiameter(ff)    = NaN;
+            meanLength(ff)      = NaN;
+            meanDensity(ff)     = NaN;
+            fracDimension(ff)   = NaN;
     
+            readErrorIdx{ff, 1} = true;
+            readErrorIdx{ff, 2} = NaN;
+            continue
+        end
+    end
+
     SPD_slices = [SPD_frame-SPD_range, SPD_frame+SPD_range];
 
     % Read image around SPD depth
