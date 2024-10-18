@@ -29,7 +29,7 @@ result_path = 'results/240730_170157';
 
 % Manually set to the SPD frame number if you already have the number, otherwise
 % leave it to -1 so that it will be inferred from the previous step. Note
-% that it is in the number of frame, not number of micro-meters
+% that it is in the number of frame, not number of micrometers
 
 SPD_frame = -1;
 

@@ -12,7 +12,7 @@ function [image] = WaveletFFT3D(image, gamma, order, wname, orient, reps, dim)
 %    - wname: Wavelet name used for decomposition
 %    - orient: Orientation for filtering ('h' = horizontal, 'v' = vertical, 'b' = both)
 %    - reps: Number of iterations for wavelet filtering
-%    - dim: Dimension to process directionally (1, 2, or 3)
+%    - dim: Dimension to process directionally (x, y, or z)
 %
 % Returns:
 %    - image: Filtered 3D image after wavelet reconstruction
@@ -24,14 +24,26 @@ image = squeeze(single(image)./255);
 n = ndims(image);
 image_size = size(image);
 
+% Parse direction to apply filters
+switch dim
+    case 'y'
+        D = 1;
+    case 'x'
+        D = 2;
+    case 'z'
+        D = 3;
+    otherwise
+        error('Unknown orientation input for WaveletFFT3D');
+end
+
 % Parse image dimension for directional processing
 if n > 3
     error('Image must have at most 3 dimensions');
 elseif n == 2
     image_size = [image_size, 1];
-elseif n ~= dim
+elseif n ~= D
     dimorder = 1:3; 
-    dimorder(dim) = []; dimorder = [dimorder, dim];
+    dimorder(D) = []; dimorder = [dimorder, D];
     image = permute(image, dimorder);
     image_size = size(image);
 end

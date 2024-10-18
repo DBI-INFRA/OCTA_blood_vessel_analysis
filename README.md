@@ -2,11 +2,11 @@
 Multi-component pipeline for automated analysis of blood vessel morphology imaged using angiographic optical coherence tomography
 
 ## MATLAB Toolboxes required
-- Fuzzy Logic Toolbox
 - Curve Fitting Toolbox
-- Wavelet Toolbox
 - Deep Learning Toolbox
+- Fuzzy Logic Toolbox
 - Signal Processing Toolbox
+- Wavelet Toolbox
 
 ## Usage and code structures
 
@@ -31,10 +31,11 @@ The first part of the OCTA analysis pipeline performs image preprocessing. For e
 - **`input_dir`**: Path to folder where images to be processed are stored. (Default = "sample_data")
 - **`result_dir`**: Path to folder where all results should be stored. A result subfolder will be automatically created here each time you run this script.
 - **`pixel_size`**: \[x, y, z] size of each pixel in micrometers
-- **`writeZDisplacement`**: true/false toggle. When set to true, the pipeline will write the z-displacement field (see point 3 above) as a tiff file, which can be used for debugging issues with skin alignment.
 - **`AutoCrop`**: true/false toggle. Set to true to automatically crop noisy z-slices away from the dataset (see point 1 above). Set to false for testing the default ```sample_data``` folder.
 - **`CropSensitivity`**: Value between \[0, 1] or 'None', default = 0.5. Controls where the automatic cropping of the image stops, set to 1 to crop away data more agressively and reduce file size; set to 0 for less agressive removal of slices, which may result in larger files and slower processing times later on in the pipeline. Can also be set to 'None' so that AutoCrop will keep data all the way to the end of the image.
-- **`Wavelet Transform Parameters`**: Parameters used to remove motion artefacts in the wavelet-FFT filter. (See helper_scripts/SuppWaveletFFT.m for details.)
+- **`Wavelet Transform Parameters`**: Parameters used to remove motion artefacts in the wavelet-FFT filter. Choose direction of stripe artefaces to remove. (See helper_scripts/SuppWaveletFFT.m for details.)
+- **`AutoAlign`**: true/false toggle. Set to true to automatically align image along air-skin border in z-direction (see point 3 above).
+- **`writeZDisplacement`**: true/false toggle. When set to true, the pipeline will write the z-displacement field as a tiff file, which can be used for debugging issues with skin alignment.
 
 #### Expected Outputs (stored in "`results_dir`/`yyMMdd_HHmmss`/")
 - **"1_AlignedImages/"**: Folder of all processed images which have been cropped, filtered and aligned. Images written as tiff.
