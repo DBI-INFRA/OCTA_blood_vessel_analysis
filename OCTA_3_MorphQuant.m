@@ -25,7 +25,7 @@ addpath('helper_scripts');
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images
 
-result_path = 'results/240730_170157';
+run("OCTA_1_5_filter_parameters.m");
 
 % Manually set to the SPD frame number if you already have the number, otherwise
 % leave it to -1 so that it will be inferred from the previous step. Note
@@ -57,6 +57,7 @@ thresholding_method = "local_adaptive_thresholding";
 % The sensitivity of the local adaptive thresholding algorithm (higher values will
 % pick up more & smaller vessels, but potentially also more noise).
 thresholding_sensitivity = 0.3;
+
 
 
 % ================= Parse input and preallocate storage ===================

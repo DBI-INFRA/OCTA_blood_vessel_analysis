@@ -106,7 +106,7 @@ for ff = 1:length(filelist)
     if AutoAlign
         [ResultStack, z_shift] = ZAlignStack(FilteredStack, 'median');
     else
-        ResultStack = FilteredStack;
+        ResultStack = double(FilteredStack);
     end
 
     % 2) Write Results to file
@@ -117,7 +117,7 @@ for ff = 1:length(filelist)
     end
     
     % Write zdisplacement
-    if writeZDisplacement
+    if writeZDisplacement & AutoAlign
         if ~exist(fullfile(imwrite_dir, 'Displacement'), "file")
             mkdir(fullfile(imwrite_dir, 'Displacement'));
         end
