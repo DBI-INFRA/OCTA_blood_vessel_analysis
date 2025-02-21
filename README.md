@@ -45,10 +45,11 @@ The first part of the OCTA analysis pipeline performs image preprocessing. For e
 
 
 ___
-### OCTA_2_CLD_SPD_estimation.m
-The second part of the pipeline estimates the Capillary Loop Depth (CLD) and Superficial Plexus Depth (SPD) from the z-aligned Optical Coherence Tomography (OCT) images produced in "OCTA_1_Preprocessing.m". 
+### OCTA_1_5_filter_parameters.m
+This script simply defines necessary parameters for the remaining two scripts (`OCTA_2_...` and `OCTA_3_...`), 
+e.g., the parameters used in the filter when detecting blood vessels, both for (`OCTA_2_...` and `OCTA_3_...`). 
 
-For each aligned image in `results_dir`/`yyMMdd_HHmmss/1_AlignedImages/`, the script will perform blood vessel segmentation and skeletonisation for each z-slice in the image, and count the number of independent skeletons (i.e., the number of unconnected blood vessel networks) through the depth of the 3D-image. The CLD is identified at the depth slice position with the maximum number of unconnected blood vessel networks, and the SPD at the depth slice position where the gradient of the curve of independent vessel networks reaches 0 for the first time after the detected CLD-depth.
+**You do not run this script, but it is necessary to adjust the parameters before running the remaining two scripts.**
 
 #### User Input Parameters
 <u>Parameters that **must** be adjusted:</u>
@@ -70,6 +71,19 @@ The following parameters were adjustable in previous versions of this script, th
   - **`.method`**: The thresholding method applied to segment the image into foreground (vessels) and background. The options available are `local_adaptive_thresholding` (the default method, uses[MATLAB's adaptthresh function](https://se.mathworks.com/help/images/ref/adaptthresh.html)), `otsu_thresholding` (uses [MATLAB's graythresh function](https://se.mathworks.com/help/images/ref/graythresh.html)) and `fuzzy_thresholding` (*helper_scripts/fuzzy_thresholding.m* from the [OCTAVA toolbox](https://github.com/GUntracht/OCTAVA/tree/main))
   - **`.sensitivity`**: The sensitivity parameter for the local adaptive thresholding algorithm. Higher values will pick up more details like smaller vessels, but potentially also more noise. The sensitivity is only relevant if local_adaptive_thresholding is selected under `.method`.
   
+#### Expected Outputs (stored in "`results_dir`/`yyMMdd_HHmmss`/")
+- **"2_CLD_SPD_estimation/"**: Folder of graphs and corresponding raw data excel sheets listing the number of independent blood vessel networks found at each image depth, with the identified CLD and SPD locations marked on each graph with a red circle.
+- **"ImageSummary.csv"**: Updated ImageSummary file from "OCTA_1", now with the automatically calculated `CLD_Frame`, `SPD_Frame`, `CLD_Depth_um` and `SPD_Depth_um` appended to the table for each processed image. To manually change the SPD depth that will be used in the third script "OCTA_3_MorphQuant.m", please edit the value listed under the `SPD_Frame` column in this file. The corresponding `SPD_Depth_um` will also have to be manually corrected.
+- **"InputParameters.mat"**: .mat file with all new user input parameters appended to the existing user parameters file, including the `median_filter_size`, `frangi_opts`, `thresholding.method` and `thresholding.sensitivity`.
+- **"SPD_not_found.txt"**: Text file that will log all images where the SPD depth could not be automatically calculated. In these cases, you can manually select the SPD depth by examining the graphs found in "2_CLD_SPD_estimation/" and editing "ImageSummary.csv" as specified above.
+
+
+___
+### OCTA_2_CLD_SPD_estimation.m
+The second part of the pipeline estimates the Capillary Loop Depth (CLD) and Superficial Plexus Depth (SPD) from the z-aligned Optical Coherence Tomography (OCT) images produced in "OCTA_1_Preprocessing.m". 
+
+For each aligned image in `results_dir`/`yyMMdd_HHmmss/1_AlignedImages/`, the script will perform blood vessel segmentation and skeletonisation for each z-slice in the image, and count the number of independent skeletons (i.e., the number of unconnected blood vessel networks) through the depth of the 3D-image. The CLD is identified at the depth slice position with the maximum number of unconnected blood vessel networks, and the SPD at the depth slice position where the gradient of the curve of independent vessel networks reaches 0 for the first time after the detected CLD-depth.
+
 #### Expected Outputs (stored in "`results_dir`/`yyMMdd_HHmmss`/")
 - **"2_CLD_SPD_estimation/"**: Folder of graphs and corresponding raw data excel sheets listing the number of independent blood vessel networks found at each image depth, with the identified CLD and SPD locations marked on each graph with a red circle.
 - **"ImageSummary.csv"**: Updated ImageSummary file from "OCTA_1", now with the automatically calculated `CLD_Frame`, `SPD_Frame`, `CLD_Depth_um` and `SPD_Depth_um` appended to the table for each processed image. To manually change the SPD depth that will be used in the third script "OCTA_3_MorphQuant.m", please edit the value listed under the `SPD_Frame` column in this file. The corresponding `SPD_Depth_um` will also have to be manually corrected.
