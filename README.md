@@ -45,7 +45,7 @@ The first part of the OCTA analysis pipeline performs image preprocessing. For e
 
 
 ___
-### OCTA_1_5_filter_parameters.m
+### config.m
 This script simply defines necessary parameters for the remaining two scripts (`OCTA_2_...` and `OCTA_3_...`), 
 e.g., the parameters used in the filter when detecting blood vessels, both for (`OCTA_2_...` and `OCTA_3_...`). 
 

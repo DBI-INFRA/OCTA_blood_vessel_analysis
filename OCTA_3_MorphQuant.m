@@ -25,7 +25,7 @@ addpath('helper_scripts');
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images
 
-run("OCTA_1_5_filter_parameters.m");
+run("config.m");
 
 % Manually set to the SPD frame number if you already have the number, otherwise
 % leave it to -1 so that it will be inferred from the previous step. Note

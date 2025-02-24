@@ -37,7 +37,7 @@ addpath('helper_scripts');
 % ================= User Parameters =======================================
 % Input image directory containing the cropped OCT images & result directory
 
-run("OCTA_1_5_filter_parameters.m");
+run("config.m");
 
 
 % Create new folder for the results of CLD- & SPD-depth computation
