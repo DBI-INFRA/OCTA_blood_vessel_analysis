@@ -1,14 +1,15 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% OCTA Workflow Pipeline 1: Preprocessing & Skin-Border Alignment
 %%%%
-%%%% Version:     1.2
-%%%% Date:        26/07/2024
+%%%% Version:     1.3
+%%%% Date:        25/02/2025
 %%%%
 %%%% Authors:     Tricia Loo (DBI-Infra IACF, tricia.loo@sund.ku.dk)
 %%%%              Julia Mertesdorf (DBI-Infra IACF, jume@di.ku.dk)
+%%%%              Peidi Xu (DBI-Infra IACF, peidi.xu@sund.ku.dk)
 %%%%
 %%%% Description: The first part of the OCTA analysis pipeline performs
-%%%%              image preprocessing by automatically cropping, filtering
+%%%%              image pre-processing by automatically cropping, filtering
 %%%%              and aligning images to the skin-border.
 %%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -18,79 +19,65 @@ close all
 clear all
 addpath('helper_scripts');
 
-%% ================= User Parameters ======================================
+%%% Specify result_dir (path where the desired 'Parameters.mat' is stored)
+result_dir = 'results\yymmdd_hhmmss\';
 
-% Input/Output Directory
-input_dir = 'sample_data';  % Input image directory containing the original 
-                            % OCT images. (Note: The image data should be
-                            % in a local drive for fast read/write speed)
+%%% Load exisiting user configurations
+load(fullfile(result_dir, 'Parameters.mat'));
 
-result_dir = 'results';     % Result directory, will be made if one does 
-                            % not exist.
+%%% Modify any existing configuration below by setting 
+% ParameterName = newValue;
 
-                            
-% Pixel size in micrometers
-pixel_size = [6.49, 6.49, 2.45];
+%% ================ Parse Inputs and Allocate Storage =====================
+% Update modified variables
+existingVars = whos("-file",fullfile(result_dir, 'Parameters.mat'));
+save(fullfile(result_dir, 'Parameters.mat'), "Struct"existingVars.name)
 
+try
+    % Load user configurations and image information
+    load(fullfile(result_dir, 'Parameters.mat'))
+    imgInfo = readtable(fullfile(result_dir, 'ImageSummary.csv'), 'Delimiter', ',');
+    
+    % Default (optimised) parameters for wavelet filtering (not recommended to change)
+    % See SuppWaveletFFT.m for details
+    gamma = 10; order = 4; wname = 'db20';             
+    
+    % Preallocate storage
+    fileslice = ones(length(filelist), 2);
+    processed_image_dir = fullfile(result_dir, 'ProcessedImages');
 
-% Automated image cropping in Z-direction
-AutoCrop = false;           %% AutoCrop is used to remove low signal data 
-                            %  from the front and enf of the stacj
-                            %  The sample data has already been cropped to 
-                            %  size and should have AutoCrop set to false. 
-                            %  To enable, set AutoCrop to true.
+    % Print user parameters & image path
+    fprintf("\nIMAGE FOLDER PATH: \n  <%s>\n", image_dir);
+    fprintf("\nOUTPUT FOLDER PATH: \n  <%s>\n", processed_image_dir);
+    fprintf(['\nSELECTED PARAMETERS:\n' ...
+             '  Cropping: %d, Sensitivity = %.2f \n' ...
+             '  Wavelet Filter Orientation, Dimensions, Reps: %s, %s, %d \n' ...
+             '  Alignment: %d \n' ...
+             '  Write Z Displacement: %d \n'], ...
+             prep_opts.AutoCrop, prep_opts.CropSensitivity, ...
+             prep_opts.WT_orient, prep_opts.WT_dim, prep_opts.WT_reps, ...
+             prep_opts.AutoAlign, prep_opts.WriteZDisplacement);
 
-CropSensitivity = 0.5;      %% Select a value between [0, 1] to control the
-                            %  amount of cropping from the end of the stack. 
-                            %  0 means more data will be kept and 1 means 
-                            %  more data will be cropped. 
-                            %  Can be set to 'None' to prevent cropping from
-                            %  end of stack.
+catch ME
+    fprintf("Check configuration file, preprocess_image must be set to true: ")
+    rethrow(ME);
+end
 
-
-% Wavelet Filtering Parameters
-orientation = 'both';  	    %% Direction of stripe artefact in image, choose
-                            %  between 'horizontal', 'vertical' or 'both' 
-dimension = 'z';            %% Direction to apply filter if image is 3D 
-                            %  stack, choose between 'x', 'y' or 'z'.
-                            %  'z' means that wavelet filter
-% Additional parameters for wavelet filtering            
-gamma = 10; order = 4;      %  Not recommended to change
-wname = 'db20'; reps = 2;   %  See SuppWaveletFFT.m for details
-                           
-
-% Image Alignment to air-skin boundary
-AutoAlign = true;           % Option to align image stack to air-skin boundary
-writeZDisplacement = true;  % Option to write the z-displacement for image into a tiff file
-
-%% ================= Parse input and preallocate storage ==================
-
-filelist  = dir(fullfile(input_dir, '*.tif*'));
-
-fileslice = ones(length(filelist), 2);
-timenow = char(datetime("now"), "yyMMdd_HHmmss");
-output_dir  = fullfile(result_dir, timenow);
-imwrite_dir = fullfile(output_dir, '1_AlignedImages');
-mkdir(imwrite_dir);
-
-% Save all user parameters in a table
-params_path = fullfile(output_dir, 'InputParameters.mat');
-preprocess_opts = struct("AutoCrop", AutoCrop, "CropSensitivity", CropSensitivity, ...
-                    "WT_gamma", gamma, "WT_order", order, "WT_wname", wname, ...
-                    "WT_reps", reps, "WT_orient", orientation, "WT_dim", dimension);
-save(params_path, "pixel_size", "preprocess_opts");
+% Create folder for processed imagr
+mkdir(processed_image_dir);
 
 %% ================= Preprocess all images in input folder ================
+fprintf('\nPROCESSING FILES: \n');
 for ff = 1:length(filelist)
-    img_path = fullfile(input_dir, filelist(ff).name);
-    img_info = imfinfo(img_path);
+    img_path = fullfile(image_dir, filelist(ff).name);
+    fprintf("  Image: <%s>\n", filelist(ff).name);
 
     % 1) Preprocessing steps
     % Read and crop stacks to relevant (non-noise) data
     OCTStack = tiffreadVolume(img_path);
     OCTStack = OCTStack(:,:,:,1);
-    if AutoCrop
-        [CroppedOCTStack, crop_range] = AutoCropOCTStack(OCTStack, CropSensitivity);
+    if prep_opts.AutoCrop
+        [CroppedOCTStack, crop_range] = AutoCropOCTStack(OCTStack, prep_opts.CropSensitivity);
         fileslice(ff,:) = crop_range;
     else 
         CroppedOCTStack = OCTStack;
@@ -99,11 +86,11 @@ for ff = 1:length(filelist)
 
     % Perform wavelet transform
 
-    FilteredStack = WaveletFFT3D(CroppedOCTStack, ...
-                                 gamma, order, wname, orientation, reps, dimension);
+    FilteredStack = WaveletFFT3D(CroppedOCTStack, gamma, order, wname,...
+                        prep_opts.WT_orient, prep_opts.WT_reps, prep_opts.WT_dim);
 
     % Z alignment of image
-    if AutoAlign
+    if prep_opts.AutoAlign
         [ResultStack, z_shift] = ZAlignStack(FilteredStack, 'median');
     else
         ResultStack = double(FilteredStack);
@@ -111,22 +98,24 @@ for ff = 1:length(filelist)
 
     % 2) Write Results to file
     % Write aligned image
-    imwrite(ResultStack(:,:,1), fullfile(imwrite_dir, filelist(ff).name));
+    imwrite(ResultStack(:,:,1), fullfile(processed_image_dir, filelist(ff).name));
     for ii = 2:size(ResultStack, 3)
-         imwrite(ResultStack(:,:,ii), fullfile(imwrite_dir, filelist(ff).name), "Writemode", "append");
+         imwrite(ResultStack(:,:,ii), fullfile(processed_image_dir, filelist(ff).name), "Writemode", "append");
     end
     
     % Write zdisplacement
-    if writeZDisplacement & AutoAlign
-        if ~exist(fullfile(imwrite_dir, 'Displacement'), "file")
-            mkdir(fullfile(imwrite_dir, 'Displacement'));
+    if prep_opts.WriteZDisplacement & prep_opts.AutoAlign
+        if ~exist(fullfile(processed_image_dir, 'Displacement'), "file")
+            mkdir(fullfile(processed_image_dir, 'Displacement'));
         end
-        imwrite(double(z_shift)/255, fullfile(imwrite_dir, 'Displacement', filelist(ff).name));
+        imwrite(double(z_shift)/255, fullfile(processed_image_dir, 'Displacement', filelist(ff).name));
     end
 
 end
 
-%% ================= Write summary of image alignment & resolution ========
-T = array2table(fileslice, "RowNames", {filelist.name}, "VariableNames", {'First Slice', 'Last Slice'});
-writetable(T, fullfile(output_dir, 'ImageSummary.csv'), 'WriteRowNames', true);
-fprintf("\nOCTA Script 1: Preprocessing & Skin-Border Alignment DONE\n");
+%% ================= Write image processing summary =======================
+imgInfo.("First Slice") = fileslice(:, 1);
+imgInfo.("Last Slice") = fileslice(:, 2);
+writetable(imgInfo, fullfile(result_dir, 'ImageSummary.csv'));
+
+fprintf("\nOCTA Script 1: Preprocessing & Skin-Border Alignment DONE\n\n");

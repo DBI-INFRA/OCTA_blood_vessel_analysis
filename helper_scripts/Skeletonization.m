@@ -57,13 +57,13 @@ switch thresholding.method
         % Apply fuzzy thresholding to binarize & segment the image
         binarized_img = fuzzy_thresholding(image_frangi, 2, 3) - 1; % nth = 2 clusters
     case 'local_adaptive_thresholding'
-        adaptive_threshold = adaptthresh(image_frangi, thresholding.sensitivity); % 2nd parameter is the sensitivity
+        adaptive_threshold = adaptthresh(image_frangi, thresholding.sensitivity(1)); % 2nd parameter is the sensitivity
         binarized_img = imbinarize(image_frangi, adaptive_threshold);
     case 'otsu_thresholding'
         threshold = graythresh(image_frangi);
         binarized_img = imbinarize(image_frangi, threshold);
     case 'test_all'
-        sensitivities_str = sprintf('%.1f, ', thresholding.test_sensitivities);
+        sensitivities_str = sprintf('%.1f, ', thresholding.sensitivity);
         fprintf("  You selected <test_all>. This will generate a plot for " + ...
             "each available thresholding method, including local adaptive " + ...
             "thresholding with the following values for the sensitivity: %s\n", ...
@@ -74,10 +74,10 @@ switch thresholding.method
         binarized_img_otsu = imbinarize(image_frangi, threshold);
 
         % Apply adaptive thresholding for each chosen sensitivity value
-        num_sensitivities = numel(thresholding.test_sensitivities);
+        num_sensitivities = numel(thresholding.sensitivity);
         binarized_images_adaptive = cell(1, num_sensitivities);
         for i = 1:num_sensitivities
-            adaptive_tr = adaptthresh(image_frangi, thresholding.test_sensitivities(i));
+            adaptive_tr = adaptthresh(image_frangi, thresholding.sensitivity(i));
             binarized_images_adaptive{i} = imbinarize(image_frangi, adaptive_tr);
         end
         
@@ -96,7 +96,7 @@ switch thresholding.method
             for i = 1:num_sensitivities
                 subplot(num_rows, 3, i + 3);
                 imshow(binarized_images_adaptive{i});
-                title(sprintf('Adaptive thresholding, s=%.1f', thresholding.test_sensitivities(i)));
+                title(sprintf('Adaptive thresholding, s=%.1f', thresholding.sensitivity(i)));
             end
             
             % Save results as a matplot-figure
@@ -143,7 +143,7 @@ if VISUALIZE
     if strcmp(thresholding.method, 'otsu_thresholding') || strcmp(thresholding.method, 'fuzzy_thresholding')
         threshold_title = char(strcat('3. ', char(strrep(thresholding.method, "_", " "))));
     elseif strcmp(thresholding.method, 'local_adaptive_thresholding')
-        threshold_title = char(strcat("3. Adaptive thresholding, s=", num2str(thresholding.sensitivity)));
+        threshold_title = char(strcat("3. Adaptive thresholding, s=", num2str(thresholding.sensitivity(1))));
     else  % if "test_all" or a non-existing method was selected, use the default
         threshold_title = char("3. Adaptive thresholding, s=0.3");
     end
