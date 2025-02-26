@@ -2,8 +2,8 @@
 %%%% OCTA Workflow Pipeline 2: Estimation of Capillary Loop Depth (CLD) 
 %%%%                           and Superficial Plexus Depth (SPD)
 %%%%
-%%%% Version:     1.2
-%%%% Date:        26/07/2024
+%%%% Version:     1.3
+%%%% Date:        26/02/2025
 %%%%
 %%%% Authors:     Tricia Loo (DBI-Infra IACF, tricia.loo@sund.ku.dk)
 %%%%              Julia Mertesdorf (DBI-Infra IACF, jume@di.ku.dk)
@@ -29,35 +29,65 @@
 %%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% ================= Initialization ========================================
+%% ====================== Initialization ==================================
 close all
 clear all
 addpath('helper_scripts');
 
-% ================= User Parameters =======================================
-% Input image directory containing the cropped OCT images & result directory
+%%% Specify result_dir (path where the desired 'Parameters.mat' is stored)
+result_dir = 'results\yymmdd_hhmmss\';
 
-run("config.m");
+%%% Load exisiting user configurations
+load(fullfile(result_dir, 'Parameters.mat'));
 
+%%% Modify any existing configuration below by setting 
+% ParameterName = newValue;
+
+%% ================ Parse Inputs and Allocate Storage =====================
+% Update modified variables
+existingVars = whos("-file",fullfile(result_dir, 'Parameters.mat'));
+save(fullfile(result_dir, 'Parameters.mat'), existingVars.name)
+
+try 
+    % Load image information and find any pre-processed image
+    imgInfo = readtable(fullfile(result_dir, 'ImageSummary.csv'), 'ReadRowNames', true, 'Delimiter', ',');
+    if exist(fullfile(result_dir, 'ProcessedImages'), 'dir')
+        image_dir = fullfile(result_dir, 'ProcessedImages');
+    end
+    
+    % Default (optimised) thresholding parameters for CLD- & SPD- detection
+    thresholding.opening_size = 75;
+    thresholding.method = "local_adaptive_thresholding";
+    thresholding.sensitivity = 0;
+    
+    % Preallocate storage
+    CLD_depths = zeros(height(imgInfo), 1);
+    SPD_depths = zeros(height(imgInfo), 1);
+    CLD_SPD_result_path = fullfile(result_dir, 'CLD_SPD_estimation');
+
+    % Print user parameters & image path
+    fprintf("\nIMAGE FOLDER PATH: \n  <%s>\n", image_dir);
+    fprintf("\nOUTPUT FOLDER PATH: \n  <%s>\n", CLD_SPD_result_path);
+    fprintf(['\nSELECTED PARAMETERS:\n' ...
+             '  Median filter size: %d \n' ...
+             '  Frangi filter: sigma range: [%d, %d], ' ...
+             'sigma stepsize: %d, correctionconst1: %.2f, correctionconst 2: %d\n\n'], ...
+             median_filter_size, frangi_opts.sigmarange(1), frangi_opts.sigmarange(2), ...
+             frangi_opts.sigmastepsize, frangi_opts.correctionconst1, frangi_opts.correctionconst2);
+catch ME
+    fprintf("Check configuration file: ")
+    rethrow(ME);
+end
 
 % Create new folder for the results of CLD- & SPD-depth computation
-CLD_SPD_result_path = fullfile(result_path, '2_CLD_SPD_estimation');
 mkdir(CLD_SPD_result_path);
 
-% Parse input directory
-fileList = dir(fullfile(result_path, '1_AlignedImages', '*.tif*'));
-imgInfo = readtable(fullfile(result_path, 'ImageSummary.csv'), 'ReadRowNames', true, 'Delimiter', ',');
-
-% ================= Compute the CLD- & SPD-depth for all images ===========
-% Inizialize empty arrays to store the CLD-depth and SPD-depth per image
-CLD_depths = zeros(height(imgInfo), 1);
-SPD_depths = zeros(height(imgInfo), 1);
-
+%% ================ Compute the CLD- & SPD-depth for all images ===========
 % Iterate over the image folder & compute the CLD- & SPD-depth for each image
 fprintf("ESTIMATE THE CLD-DEPTH & SPD-DEPTH:\n")
-for ff = 1:length(fileList)
-    image_path = fullfile(fileList(ff).folder, fileList(ff).name);
-    [CLD_depth, SPD_depth] = CLD_SPD_Estimation(result_path, image_path, median_filter_size, frangi_opts, thresholding, CLD_SPD_result_path, fileList(ff).name, pixel_size(3));
+for ff = 1:length(filelist)
+    image_path = fullfile(filelist(ff).folder, filelist(ff).name);
+    [CLD_depth, SPD_depth] = CLD_SPD_Estimation(result_dir, image_path, median_filter_size, frangi_opts, thresholding, CLD_SPD_result_path, filelist(ff).name, pixel_size(3));
     CLD_depths(ff) = CLD_depth;
     SPD_depths(ff) = SPD_depth;
     CLD_depth_um = (CLD_depth-1)*pixel_size(3);
@@ -66,7 +96,7 @@ for ff = 1:length(fileList)
     else
         SPD_depth_um = NaN;
     end
-    fprintf("  Image: <%s>:  CLD_depth = %.1f,  SPD_depth = %.1f\n", fileList(ff).name, CLD_depth_um, SPD_depth_um);
+    fprintf("  Image: <%s>:  CLD_depth = %.1f,  SPD_depth = %.1f\n", filelist(ff).name, CLD_depth_um, SPD_depth_um);
 end
 
 % Add the CLD- & SPD-depth info as a new column to the table
@@ -75,11 +105,9 @@ imgInfo.("SPD_Frame") = SPD_depths;
 imgInfo.("CLD_Depth_um") = (CLD_depths-1)*pixel_size(3);
 imgInfo.("SPD_Depth_um") = (SPD_depths-1)*pixel_size(3);
 fprintf("\n"); disp(imgInfo);
-table_path = fullfile(result_path, 'ImageSummary.csv');
-writetable(imgInfo, table_path, 'WriteRowNames',true);
+writetable(imgInfo, fullfile(result_dir, 'ImageSummary.csv'), 'WriteRowNames', true);
 
-fprintf("\nOCTA Script 2: Estimation of CLD-depth & SPD-depth DONE\n");
-
+fprintf("\nOCTA Script 2: Estimation of CLD-depth & SPD-depth DONE\n\n");
 
 % ================= Function for CLD- & SPD-depth estimation ==============
 %% CLD-depth & SPD-depth Estimation
@@ -122,11 +150,7 @@ end
 
 num_segments_array = num_segments_array(SPD_range+1: end-SPD_range);
 
-% Smooth the number of segments curve with a moving average filter (in the paper, the window is 20um)
-% window_size = 20;
-% Smooth the number of segments curve with a moving average filter 
-% (Note: In the paper, the window is 20um, which corresponds to a z-depth of 8)
-
+% Smooth the number of segments curve with a moving average filter
 window_size = round(20 / pixel_size);
 smoothed_array = movmean(num_segments_array, window_size);
 

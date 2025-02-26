@@ -64,7 +64,7 @@ end
 for ss = 1:image_size(end)
     slice = image(:,:,ss);
     for rr = 1:reps
-        imageFiltered = SuppWaveletFFT(slice,gamma,order,wname,O);
+        imageFiltered = SuppWaveletFFT(slice, gamma, order, wname, O);
         slice = min(imageFiltered,slice); % Take the minimum between the filtered and old image
     end
     image(:,:,ss) = slice;
