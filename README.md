@@ -14,7 +14,7 @@ This package consists of a "config.m" file, and three "OCTA_... .m" scripts in a
 The "config.m" file should be run before any of the main scripts are run. The three main scripts are expected to be run in order for analysis of blood vessel morphology at the Superficial Plexus Depth (SPD), but can be operated independently.
 
 - **Expected Input**: An entire folder of OCTA images. We provide an additional folder of pre-cropped sample images in the folder `sample_data` as an example of expected input. Please keep `AutoCrop` set to `false` for these test images, since they have already been cropped for size.
-- **Expected Output**: Each time "config.m" is run, a subfolder with the current date-time in the form of `yyMMdd_HHmmss` (e.g., "240722_154054") will be created in a chosen result folder "result_dir" along with three files "ImageSummary.csv", "Parameters.m", "Parameters.csv". The pipeline will save all intermediate and final outputs into the subfolder and will also expect to receive intermediate data from the subfolder.
+- **Expected Output**: Each time "config.m" is run, a subfolder with the current date-time in the form of `yyMMdd_HHmmss` (e.g., "240722_154054") will be created in a chosen result folder "result_dir" along with three files "ImageSummary.csv", "Parameters.m". The pipeline will save all intermediate and final outputs into the subfolder and will also expect to receive intermediate data from the subfolder.
 
 Detailed usage of the main scripts are given below.
 
@@ -75,7 +75,7 @@ The first part of the OCTA analysis pipeline performs image preprocessing. For e
 
 <u>Optional:</u>
 - Use the Image Pre-processing Parameters section in config.m to set pre-processing behaviour 
-- You can overwrite existing config.m parameters in this script using "\<ParameterName> = \<newValue>;"
+- You can overwrite any existing parameters in 'Parameters.mat' using "\<ParameterName> = \<newValue>;"
 
 #### Expected Outputs (stored in "`output_dir`/`yyMMdd_HHmmss`/")
 - **"ProcessedImages/"**: Folder of all processed images which have been cropped, filtered and aligned. Images written as tiff.
@@ -93,7 +93,7 @@ The script will preferentially use preprocessed images from "`results_dir`/`yyMM
 
 <u>Optional:</u>
 - Use the Vessel Enhancement Parameters section in config.m to set vessel processing behaviour 
-- You can overwrite any existing parameters in 'config.m' using "\<ParameterName> = \<newValue>;"
+- You can overwrite any existing parameters in 'Parameters.mat' using "\<ParameterName> = \<newValue>;"
 - Note: Segmentation parameters for OCTA_2 are set to optimised defaults and cannot be changed from config file.
 
 #### Expected Outputs (stored in "`results_dir`/`yyMMdd_HHmmss`/")
@@ -111,7 +111,7 @@ The depth can be specified as a specific frame or as a Variable_Name in 'ImageSu
 
 <u>Optional:</u>
 - Use the Vessel Quantification Parameters section in config.m to set vessel quantification behaviour 
-- You can overwrite any existing parameters in 'config.m' using "\<ParameterName> = \<newValue>;"
+- You can overwrite any existing parameters in 'Parameters.mat' using "\<ParameterName> = \<newValue>;"
 
 #### Expected Outputs (stored in "`results_dir`/`yyMMdd_HHmmss/`")
 - **"MIP_skeletonization_results/"**: Folder of the visualization of skeletonisation and thresholding (segmentation) results written as ".fig" and ".pdf" files.
