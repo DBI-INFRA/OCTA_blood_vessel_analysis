@@ -27,11 +27,12 @@ load(fullfile(result_dir, 'Parameters.mat'));
 
 %%% Modify any existing configuration below by setting 
 % ParameterName = newValue;
+% e.g. WT_orient = 'horizontal';
 
 %% ================ Parse Inputs and Allocate Storage =====================
 % Update modified variables
 existingVars = whos("-file",fullfile(result_dir, 'Parameters.mat'));
-save(fullfile(result_dir, 'Parameters.mat'), "Struct"existingVars.name)
+save(fullfile(result_dir, 'Parameters.mat'), existingVars.name)
 
 try
     % Load user configurations and image information

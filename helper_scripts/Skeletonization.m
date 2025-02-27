@@ -127,15 +127,15 @@ end
 
 skeletonized_img = bwmorph(binarized_img, 'skel', Inf);
 
-% Save skeleton to result folder
-skeletonization_path = fullfile(path, "Skeletonization");
-if ~exist(skeletonization_path, 'dir')
-    mkdir(skeletonization_path);
-end
-skeletonized_img_path = fullfile(skeletonization_path, strcat(img_name, "_skeleton.tif"));
-imwrite(skeletonized_img, skeletonized_img_path);
-
 if VISUALIZE
+    % Save skeleton to result folder
+    skeletonization_path = fullfile(path, "Skeletonization");
+    if ~exist(skeletonization_path, 'dir')
+        mkdir(skeletonization_path);
+    end
+    skeletonized_img_path = fullfile(skeletonization_path, strcat(img_name, "_skeleton.tif"));
+    imwrite(skeletonized_img, skeletonized_img_path);
+
     % Display the processed image at the different steps
     F1 = figure(1);
     subplot(1,4,1); imshow(image_median./255); title('1. Median filtering');

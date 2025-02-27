@@ -30,13 +30,13 @@ CropSensitivity = 0.5;      %% Select a value between [0, 1] to control the
                             %  end of stack.
 
 % Wavelet Filtering Parameters
-orientation = 'both';  	%% Direction of stripe artefact in image, choose
+WT_orient = 'both';  	%% Direction of stripe artefact in image, choose
                         %  between 'horizontal', 'vertical' or 'both' 
-dimension = 'z';        %% Direction to apply filter if image is 3D stack, 
+WT_dim = 'z';           %% Direction to apply filter if image is 3D stack, 
                         %  choose between 'x', 'y' or 'z'.
                         %  'z' means that wavelet filter is applied
                         %  slice-by-slice in the 3rd dimension
-reps = 2;               %% Number of filtering repetitions, higher values
+WT_reps = 2;            %% Number of filtering repetitions, higher values
                         % will increase amounts of filters.
 
 % Image Alignment to air-skin boundary
@@ -108,7 +108,7 @@ params_path = fullfile(output_dir, 'Parameters.mat');
 save(params_path, "image_dir", "output_dir", "pixel_size", "filelist")
 if preprocess_image
     prep_opts = struct("AutoCrop", AutoCrop, "CropSensitivity", CropSensitivity, ...
-                "WT_orient", orientation, "WT_dim", dimension, "WT_reps", reps, ...
+                "WT_orient", WT_orient, "WT_dim", WT_dim, "WT_reps", WT_reps, ...
                 "AutoAlign", AutoAlign, "WriteZDisplacement", WriteZDisplacement);
     save(params_path, "prep_opts", "-append");
 end

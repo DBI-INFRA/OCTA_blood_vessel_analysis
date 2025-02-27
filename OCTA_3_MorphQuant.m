@@ -32,10 +32,10 @@ load(fullfile(result_dir, 'Parameters.mat'));
 
 %%% Modify any existing configuration below by setting:
 % ParameterName = newValue;
-% thresholding.method = "test_all";
-% thresholding.sensitivity = [0.1, 0.2, 0.3, 0.4, 0.5];
-% quantify_frame = 156;
-% quantify_range_um = 5;
+% e.g. thresholding.method = "test_all";
+% e.g. thresholding.sensitivity = [0.1, 0.2, 0.3, 0.4, 0.5];
+% e.g. quantify_frame = 156;
+% e.g. quantify_range_um = 5;
 
 %% ================ Parse Inputs and Allocate Storage =====================
 % Update modified variables

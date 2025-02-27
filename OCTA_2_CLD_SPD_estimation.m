@@ -40,8 +40,9 @@ result_dir = 'results\yymmdd_hhmmss\';
 %%% Load exisiting user configurations
 load(fullfile(result_dir, 'Parameters.mat'));
 
-%%% Modify any existing configuration below by setting 
+%%% Modify any existing configuration below by setting:
 % ParameterName = newValue;
+% e.g. median_filter_size = 2;
 
 %% ================ Parse Inputs and Allocate Storage =====================
 % Update modified variables
