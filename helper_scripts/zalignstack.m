@@ -1,4 +1,4 @@
-function [AlignedStack, ZDisplacement] = ZAlignStack(stack, method)
+function [AlignedStack, ZDisplacement] = zalignstack(stack, method)
 % -------------------------------------------------------------------------
 % Description:
 %    This function aligns a 3D stack along the z-dimension using a 
