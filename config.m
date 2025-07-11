@@ -89,8 +89,13 @@ quantify_frame = 'SPD_Frame';   %% Set central frame for quantification.
                                 % with frames to use for each image.
 
 quantify_range_um = 30;         %% Depth around the selected frame to 
-                                % include in quantification (microns)                             
-save_skeleton = true;
+                                % include in quantification (microns) 
+
+save_detailed_results = true; 	%% Saves detailed morphological results 
+                                % including image of vessel skeleton,
+                                % binary image of vessel, image of labeled
+                                % skeleton, and table of per-branch
+                                % measurements.
 
 %% ================= Save configuration parameters ========================
 % Create results folder
@@ -113,4 +118,4 @@ if preprocess_image
     save(params_path, "prep_opts", "-append");
 end
 save(params_path, "median_filter_size", "frangi_opts", "thresholding", "-append");
-save(params_path, "quantify_frame", "quantify_range_um", "save_skeleton", "-append");
+save(params_path, "quantify_frame", "quantify_range_um", "save_detailed_results", "-append");

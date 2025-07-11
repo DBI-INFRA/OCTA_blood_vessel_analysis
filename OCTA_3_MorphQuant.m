@@ -37,6 +37,7 @@ load(fullfile(result_dir, 'Parameters.mat'));
 % e.g. quantify_frame = 156;
 % e.g. quantify_range_um = 5;
 
+
 %% ================ Parse Inputs and Allocate Storage =====================
 % Update modified variables
 existingVars = whos("-file",fullfile(result_dir, 'Parameters.mat'));
@@ -62,16 +63,16 @@ try
     readErrorIdx  = cell(num_images, 2);
     [readErrorIdx{:, 1}] = deal(false);
 
-    skeleton_result_path = fullfile(result_dir, 'MIP_skeletonization_results');
+    detailed_result_path = fullfile(result_dir, 'DetailedResults');
 
 catch ME
     fprintf("Check configuration file: ")
     rethrow(ME);
 end
 
-% Create folder for saving skeletons
-if save_skeleton && ~isfolder(skeleton_result_path)
-    mkdir(skeleton_result_path);
+% Create folder for saving detailed results
+if save_detailed_results && ~isfolder(detailed_result_path)
+    mkdir(detailed_result_path);
 end
 
 % ================= Quantify all images in folder =========================
@@ -120,19 +121,31 @@ for ff = 1:length(filelist)
         StackMIP = StackMIP * 255;
     end
     StackMIP = double(int16(squeeze(StackMIP)));
-    save_path = fullfile(skeleton_result_path, filelist(ff).name);
-    [skeleton, binary_img] = Skeletonization(StackMIP, median_filter_size, frangi_opts, thresholding, save_skeleton, save_path);
+    [skeleton, binary_img] = Skeletonization(StackMIP, median_filter_size, frangi_opts, thresholding, false, "");
     
-    %imwrite(binary_img, strcat(save_path, '_binary.png'))
-
     % 2) Quantify the blood vessel network morphology
-    % Average Vessel Diameter in um
-    avg_diameter = vessel_diameter(binary_img, skeleton);
-    meanDiameter(ff) = avg_diameter*img_reso(1);
+    % Split skeleton into branches
+    [labeled_skeleton, ~] = splitbranches(skeleton);
 
+    % Calculate vessel diameter at each point along skeleton
+    skeleton_diameters = double(bwdist(~binary_img).*skeleton*2);
+
+    % Make Vessel Measurements per Branch
+    vessel_morph = regionprops(labeled_skeleton, skeleton_diameters, 'MeanIntensity', 'Area');
+    vessel_label = regionprops(labeled_skeleton, labeled_skeleton, 'MeanIntensity');
+    vessel_measurements = table([vessel_label.MeanIntensity]', ...
+                                [vessel_morph.Area]', [vessel_morph.Area]'*img_reso(1), ...
+                                [vessel_morph.MeanIntensity]', [vessel_morph.MeanIntensity]' *img_reso(1), ...
+                                'VariableNames', {'Label', 'Length_px', 'Length_um', 'MeanDiameter_px', 'MeanDiameter_um'}); 
+    vessel_measurements = vessel_measurements([vessel_measurements.Label]>1,:);
+    num_vessels = size(vessel_measurements, 1);
+    
     % Average Vessel Branch Length in um
-    [avg_length, num_vessels] = vessel_length(skeleton);
-    meanLength(ff) = avg_length*img_reso(1);
+    meanLength(ff) = mean([vessel_measurements.Length_um]);
+
+    % Average Vessel Diameter in um (including at branch points)
+    avg_diameter = mean(skeleton_diameters(skeleton));
+    meanDiameter(ff) = avg_diameter*img_reso(1);
 
     % Average Vessel Density per mm2
     img_reso_mm = img_reso*(10^-3);
@@ -146,6 +159,41 @@ for ff = 1:length(filelist)
     % Print the quantification results
     fprintf("    %d. %s:  Diameter: %.3f,  Length: %.3f,  Density: %.3f,  Fractal dimension: %.3f\n", ...
         ff, filelist(ff).name, meanDiameter(ff), meanLength(ff), meanDensity(ff), fracDimension(ff));
+
+    % Save detailed results
+    if save_detailed_results
+        [~, filename, ~] = fileparts(filelist(ff).name);
+        save_path = fullfile(detailed_result_path, filename);
+        writetable(vessel_measurements, [save_path '_perbranchmeasurements.csv'])
+
+        % Write Integer Output
+        imwrite(binary_img, [save_path '_vessels.tif'])
+        imwrite(skeleton, [save_path '_skeleton.tif'])
+        imwrite(uint16(labeled_skeleton), [save_path '_labeledskeleton.tif'])
+
+        % Plot mapped measurements
+        turbo_on_black = [0, 0, 0; turbo(255)];
+
+        imagesc(skeleton_diameters), axis image, axis off, 
+        colormap(turbo_on_black), colorbar
+        title("Vessel skeleton color-mapped to vessel diameter")
+        exportgraphics(gcf, [save_path '_skeletondiameter.png'], 'Resolution', 600);
+
+        skeleton_branchlength = labelmapper(labeled_skeleton, [vessel_measurements.Label], [vessel_measurements.Length_um]);
+        imagesc(skeleton_branchlength), axis image, axis off, 
+        colormap(turbo_on_black), colorbar
+        title("Vessel skeleton color-mapped to branch length")
+        exportgraphics(gcf, [save_path '_skeletonbranchlength.png'], 'Resolution', 600);
+
+        skeleton_branchdiameter = labelmapper(labeled_skeleton, [vessel_measurements.Label], [vessel_measurements.MeanDiameter_um]);
+        imagesc(skeleton_branchdiameter), axis image, axis off, 
+        colormap(turbo_on_black), colorbar
+        title("Vessel skeleton color-mapped to mean branch diameter")
+        exportgraphics(gcf, [save_path '_skeletonbranchdiameter.png'], 'Resolution', 600);
+
+        close
+    end
+
 end
 
 % ================= Write results to file =================================
@@ -174,7 +222,7 @@ param_table = [{"image_dir"}, {image_dir};
                fieldnames(thresholding), struct2cell(thresholding);
                {"quantify_frame"}, {quantify_frame};
                {"quantify_range_um"}, {quantify_range_um};
-               {"save_skeleton"}, {save_skeleton}];
+               {"save_detailed_results"}, {save_detailed_results}];
 writecell(param_table, fullfile(result_dir, "Parameters.csv"))
 
 % Morphology calculations
