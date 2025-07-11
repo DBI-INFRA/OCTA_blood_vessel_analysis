@@ -6,4 +6,4 @@
 
 # Ignore result directories
 results/*
-
+~.asv
