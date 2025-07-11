@@ -114,7 +114,7 @@ The depth can be specified as a specific frame or as a Variable_Name in 'ImageSu
 - You can overwrite any existing parameters in 'Parameters.mat' using "\<ParameterName> = \<newValue>;"
 
 #### Expected Outputs (stored in "`results_dir`/`yyMMdd_HHmmss/`")
-- **"MIP_skeletonization_results/"**: Folder of the visualization of skeletonisation and thresholding (segmentation) results written as ".fig" and ".pdf" files.
-- **"MorphologyResults.csv"**: A table showing the morphology results of the skeletonized blood vessel network at the SPD-depth of each image, including mean diameter, length, vessel density, fractal dimension.
+- **"DetailedResults/"**: Folder of detailed results output, including the binarized vessels, vessel skeletons, labeled skeleton segments, .csv file of morphological measurements for each branch as well as graphs displaying morphological measurements per branch.
+- **"MorphologyResults.csv"**: A table showing the summarised morphology results of the skeletonized blood vessel network at the SPD-depth of each image, including mean diameter, length, vessel density, fractal dimension. The mean vessel diameter is calculated on the full segmented vessel, including on branch points and on 
 - **"Parameters.csv"**: All user input variables saved in "Parameters.mat" are written out into a .csv file for ease of reading.
 - **"WarningLog.txt"**: Text file to log all images where the full SPD range (`[SPD_depth-round(SPD_range_um/pixel_size(3)), SPD_depth+round(SPD_range_um/pixel_size(3))]`) cannot be read in, either because the SPD was not found (SPD_frame = "NaN") or because the specified SPD range goes beyond the slices available in the corresponding "1_AlignedImage/" file. In these cases, the user may choose to manually specify an SPD (see expected outputs for "OCTA_2_CLD_SPD_estimation.m") or re-crop the images with "OCTA_1_Preprocessing" with a lower `CropSensitivity` setting, for these specific images with errors.
