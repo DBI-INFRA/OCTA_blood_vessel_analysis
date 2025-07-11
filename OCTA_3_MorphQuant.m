@@ -121,7 +121,7 @@ for ff = 1:length(filelist)
         StackMIP = StackMIP * 255;
     end
     StackMIP = double(int16(squeeze(StackMIP)));
-    [skeleton, binary_img] = Skeletonization(StackMIP, median_filter_size, frangi_opts, thresholding, false, "");
+    [skeleton, binary_img] = skeletonization(StackMIP, median_filter_size, frangi_opts, thresholding, false, "");
     
     % 2) Quantify the blood vessel network morphology
     % Split skeleton into branches
@@ -153,7 +153,7 @@ for ff = 1:length(filelist)
     meanDensity(ff) = num_vessels/img_area;
 
     % Fractal Dimension
-    [n, r] = BoxCount2D(skeleton);
+    [n, r] = boxcount2D(skeleton);
     fracDimension(ff) = -1*fit(log(r)', log(n)', 'poly1').p1;
 
     % Print the quantification results

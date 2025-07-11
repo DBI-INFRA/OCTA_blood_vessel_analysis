@@ -40,7 +40,7 @@ try
     imgInfo = readtable(fullfile(result_dir, 'ImageSummary.csv'), 'Delimiter', ',');
     
     % Default (optimised) parameters for wavelet filtering (not recommended to change)
-    % See SuppWaveletFFT.m for details
+    % See waveletfft3D.m for details
     gamma = 10; order = 4; wname = 'db20';             
     
     % Preallocate storage
@@ -78,7 +78,7 @@ for ff = 1:length(filelist)
     OCTStack = tiffreadVolume(img_path);
     OCTStack = OCTStack(:,:,:,1);
     if prep_opts.AutoCrop
-        [CroppedOCTStack, crop_range] = AutoCropOCTStack(OCTStack, prep_opts.CropSensitivity);
+        [CroppedOCTStack, crop_range] = autocropOCTstack(OCTStack, prep_opts.CropSensitivity);
         fileslice(ff,:) = crop_range;
     else 
         CroppedOCTStack = OCTStack;
@@ -87,12 +87,12 @@ for ff = 1:length(filelist)
 
     % Perform wavelet transform
 
-    FilteredStack = WaveletFFT3D(CroppedOCTStack, gamma, order, wname,...
+    FilteredStack = waveletfft3D(CroppedOCTStack, gamma, order, wname,...
                         prep_opts.WT_orient, prep_opts.WT_reps, prep_opts.WT_dim);
 
     % Z alignment of image
     if prep_opts.AutoAlign
-        [ResultStack, z_shift] = ZAlignStack(FilteredStack, 'median');
+        [ResultStack, z_shift] = zalignstack(FilteredStack, 'median');
     else
         ResultStack = double(FilteredStack);
     end

@@ -139,7 +139,7 @@ for z = 1+SPD_range: depth-SPD_range
 
     depth_slice = mean(image(:, :, z-SPD_range: z+SPD_range), 3);
 
-    [skeletonized_slice, ~] = Skeletonization(depth_slice, median_filter_size, frangi_opts, thresholding, VISUALIZE, "none");
+    [skeletonized_slice, ~] = skeletonization(depth_slice, median_filter_size, frangi_opts, thresholding, VISUALIZE, "none");
     % Find connected segments & count the number of independent segments
     segments = bwconncomp(skeletonized_slice);
     num_segments = segments.NumObjects;
