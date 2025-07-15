@@ -1,4 +1,4 @@
-function [stack_out, crop_range] = AutoCropOCTStack(stack_in, sensitivity)
+function [stack_out, crop_range] = autocropOCTstack(stack_in, sensitivity)
 % -------------------------------------------------------------------------
 % Description:
 %    This function automatically crops an OCT stack to the region where the 

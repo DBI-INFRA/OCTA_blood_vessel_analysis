@@ -1,4 +1,4 @@
-function [n, r] = BoxCount2D(inputSkel)
+function [n, r] = boxcount2D(inputSkel)
 % -------------------------------------------------------------------------
 % Description:
 %    This function calculates fractal dimensions for a 2D input skeleton 

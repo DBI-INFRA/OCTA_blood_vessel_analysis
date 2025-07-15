@@ -1,4 +1,4 @@
-function [skeletonized_img, binarized_img] = Skeletonization(image, median_filter_size, frangi_opts, thresholding, VISUALIZE, save_path)
+function [skeletonized_img, binarized_img] = skeletonization(image, median_filter_size, frangi_opts, thresholding, VISUALIZE, save_path)
 % ---------------------------------------------------------------------------
 % Description:
 %    This function segments & skeletonizes the blood vessel network of the
