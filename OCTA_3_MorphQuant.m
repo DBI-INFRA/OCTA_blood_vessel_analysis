@@ -164,12 +164,12 @@ for ff = 1:length(filelist)
     if save_detailed_results
         [~, filename, ~] = fileparts(filelist(ff).name);
         save_path = fullfile(detailed_result_path, filename);
-        writetable(vessel_measurements, [save_path '_perbranchmeasurements.csv'])
+        writetable(vessel_measurements, [save_path '_perBranchMeasurements.csv'])
 
         % Write Integer Output
         imwrite(binary_img, [save_path '_vessels.tif'])
         imwrite(skeleton, [save_path '_skeleton.tif'])
-        imwrite(uint16(labeled_skeleton), [save_path '_labeledskeleton.tif'])
+        imwrite(uint16(labeled_skeleton), [save_path '_labeledSkeleton.tif'])
 
         % Plot mapped measurements
         turbo_on_black = [0, 0, 0; turbo(255)];
@@ -177,19 +177,19 @@ for ff = 1:length(filelist)
         imagesc(skeleton_diameters), axis image, axis off, 
         colormap(turbo_on_black), colorbar
         title("Vessel skeleton color-mapped to vessel diameter")
-        exportgraphics(gcf, [save_path '_skeletondiameter.png'], 'Resolution', 600);
-
-        skeleton_branchlength = labelmapper(labeled_skeleton, [vessel_measurements.Label], [vessel_measurements.Length_um]);
-        imagesc(skeleton_branchlength), axis image, axis off, 
-        colormap(turbo_on_black), colorbar
-        title("Vessel skeleton color-mapped to branch length")
-        exportgraphics(gcf, [save_path '_skeletonbranchlength.png'], 'Resolution', 600);
+        exportgraphics(gcf, [save_path '_vesselDiameter.png'], 'Resolution', 600);
 
         skeleton_branchdiameter = labelmapper(labeled_skeleton, [vessel_measurements.Label], [vessel_measurements.MeanDiameter_um]);
         imagesc(skeleton_branchdiameter), axis image, axis off, 
         colormap(turbo_on_black), colorbar
         title("Vessel skeleton color-mapped to mean branch diameter")
-        exportgraphics(gcf, [save_path '_skeletonbranchdiameter.png'], 'Resolution', 600);
+        exportgraphics(gcf, [save_path '_branchMeanDiameter.png'], 'Resolution', 600);
+
+        skeleton_branchlength = labelmapper(labeled_skeleton, [vessel_measurements.Label], [vessel_measurements.Length_um]);
+        imagesc(skeleton_branchlength), axis image, axis off, 
+        colormap(turbo_on_black), colorbar
+        title("Vessel skeleton color-mapped to branch length")
+        exportgraphics(gcf, [save_path '_branchLength.png'], 'Resolution', 600);
 
         close
     end
