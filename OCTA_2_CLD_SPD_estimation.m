@@ -87,7 +87,7 @@ mkdir(CLD_SPD_result_path);
 % Iterate over the image folder & compute the CLD- & SPD-depth for each image
 fprintf("ESTIMATE THE CLD-DEPTH & SPD-DEPTH:\n")
 for ff = 1:length(filelist)
-    image_path = fullfile(filelist(ff).folder, filelist(ff).name);
+    image_path = fullfile(image_dir, filelist(ff).name);
     [CLD_depth, SPD_depth] = CLD_SPD_estimation(result_dir, image_path, median_filter_size, frangi_opts, thresholding, CLD_SPD_result_path, filelist(ff).name, pixel_size(3));
     CLD_depths(ff) = CLD_depth;
     SPD_depths(ff) = SPD_depth;
