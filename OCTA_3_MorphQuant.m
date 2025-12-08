@@ -174,20 +174,29 @@ for ff = 1:length(filelist)
         % Plot mapped measurements
         turbo_on_black = [0, 0, 0; turbo(255)];
 
-        imagesc(skeleton_diameters), axis image, axis off, 
-        colormap(turbo_on_black), colorbar
+        imagesc(skeleton_diameters), axis image, axis off
+        colormap(turbo_on_black)
+        cb = colorbar;
+        cb.Label.String = 'Vessel diameter (µm)';
+        cb.Label.FontSize = 12;
         title("Vessel skeleton color-mapped to vessel diameter")
         exportgraphics(gcf, [save_path '_vesselDiameter.png'], 'Resolution', 600);
 
         skeleton_branchdiameter = labelmapper(labeled_skeleton, [vessel_measurements.Label], [vessel_measurements.MeanDiameter_um]);
         imagesc(skeleton_branchdiameter), axis image, axis off, 
-        colormap(turbo_on_black), colorbar
+        colormap(turbo_on_black), 
+        cb = colorbar;
+        cb.Label.String = 'Vessel mean diameter (µm)';
+        cb.Label.FontSize = 12;
         title("Vessel skeleton color-mapped to mean branch diameter")
         exportgraphics(gcf, [save_path '_branchMeanDiameter.png'], 'Resolution', 600);
 
         skeleton_branchlength = labelmapper(labeled_skeleton, [vessel_measurements.Label], [vessel_measurements.Length_um]);
         imagesc(skeleton_branchlength), axis image, axis off, 
-        colormap(turbo_on_black), colorbar
+        colormap(turbo_on_black), 
+        cb = colorbar;
+        cb.Label.String = 'Branch length (µm)';
+        cb.Label.FontSize = 12;
         title("Vessel skeleton color-mapped to branch length")
         exportgraphics(gcf, [save_path '_branchLength.png'], 'Resolution', 600);
 
