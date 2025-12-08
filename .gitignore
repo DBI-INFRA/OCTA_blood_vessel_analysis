@@ -7,3 +7,6 @@
 # Ignore result directories
 results/*
 *.asv
+
+# Ignore data directory
+data/
