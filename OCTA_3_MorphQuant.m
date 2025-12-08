@@ -167,9 +167,9 @@ for ff = 1:length(filelist)
         writetable(vessel_measurements, [save_path '_perBranchMeasurements.csv'])
 
         % Write Integer Output
-        imwrite(binary_img, [save_path '_vessels.tif'])
-        imwrite(skeleton, [save_path '_skeleton.tif'])
-        imwrite(uint16(labeled_skeleton), [save_path '_labeledSkeleton.tif'])
+        imwrite(~binary_img, [save_path '_vessels.tif'], compression="none")
+        imwrite(~skeleton, [save_path '_skeleton.tif'], compression="none")
+        imwrite(uint16(labeled_skeleton), [save_path '_labeledSkeleton.tif'], compression="none")
 
         % Plot mapped measurements
         turbo_on_black = [0, 0, 0; turbo(255)];
