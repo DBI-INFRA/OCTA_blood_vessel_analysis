@@ -28,7 +28,7 @@ addpath('helper_scripts');
 result_dir = 'results\yymmdd_hhmmss\';
 
 %%% Load exisiting user configurations
-load(fullfile(result_dir, 'Parameters.mat'));
+parameters = load(fullfile(result_dir, 'Parameters.mat'));
 
 %%% Modify any existing configuration below by setting:
 % ParameterName = newValue;
@@ -40,8 +40,11 @@ load(fullfile(result_dir, 'Parameters.mat'));
 
 %% ================ Parse Inputs and Allocate Storage =====================
 % Update modified variables
-existingVars = whos("-file",fullfile(result_dir, 'Parameters.mat'));
-save(fullfile(result_dir, 'Parameters.mat'), existingVars.name)
+existingVars = fieldnames(parameters);
+for i = 1:numel(existingVars)
+    eval([existingVars{i} ' = parameters.' existingVars{i} ';']);
+end
+save(fullfile(result_dir, 'Parameters.mat'), existingVars{:});
 
 try
     % Load image information and find any pre-processed image
@@ -78,87 +81,12 @@ end
 % ================= Quantify all images in folder =========================
 fprintf("\nProcessing %d images:\n", num_images);
 for ff = 1:length(filelist)
-    
-    % 1) Parse image information
-    img_path   = fullfile(image_dir, filelist(ff).name);
-
-    if isscalar(quantify_frame)
-        central_frame = quantify_frame;
-    else
-        central_frame  = imgInfo{filelist(ff).name, quantify_frame};
-        if isnan(central_frame)
-            meanDiameter(ff)    = NaN;
-            meanLength(ff)      = NaN;
-            meanDensity(ff)     = NaN;
-            fracDimension(ff)   = NaN;
-    
-            readErrorIdx{ff, 1} = true;
-            readErrorIdx{ff, 2} = NaN;
-            continue
-        end
-    end
-    
-    quantify_slices = [central_frame-quantify_range, central_frame+quantify_range];
-
-    % Read image around chosen depth
-    try
-        ImageStack = tiffreadVolume(img_path, 'PixelRegion', {[1 inf], [1 inf], quantify_slices});
-    catch
-        ImageStack = tiffreadVolume(img_path, 'PixelRegion', {[1 inf], [1 inf]});
-        
-        quantify_slices(2) = size(ImageStack, 3);
-        readErrorIdx{ff, 1} = true; 
-        readErrorIdx{ff, 2} = [quantify_slices, diff(quantify_slices)*pixel_size(3)];
-    end
-
-    if numel(size(ImageStack)) == 4
-        ImageStack = ImageStack(:,:,:,1);
-    end
-    
-    % Create mean-intensity-projection and skeletonize image
-    StackMIP = mean(ImageStack, 3);
-    if max(StackMIP(:)) <= 1
-        StackMIP = StackMIP * 255;
-    end
-    StackMIP = double(int16(squeeze(StackMIP)));
-    [skeleton, binary_img] = skeletonization(StackMIP, median_filter_size, frangi_opts, thresholding, false, "");
-    
-    % 2) Quantify the blood vessel network morphology
-    % Split skeleton into branches
-    [labeled_skeleton, ~] = splitbranches(skeleton);
-
-    % Calculate vessel diameter at each point along skeleton
-    skeleton_diameters = double(bwdist(~binary_img).*skeleton*2);
-
-    % Make Vessel Measurements per Branch
-    vessel_morph = regionprops(labeled_skeleton, skeleton_diameters, 'MeanIntensity', 'Area');
-    vessel_label = regionprops(labeled_skeleton, labeled_skeleton, 'MeanIntensity');
-    vessel_measurements = table([vessel_label.MeanIntensity]', ...
-                                [vessel_morph.Area]', [vessel_morph.Area]'*img_reso(1), ...
-                                [vessel_morph.MeanIntensity]', [vessel_morph.MeanIntensity]' *img_reso(1), ...
-                                'VariableNames', {'Label', 'Length_px', 'Length_um', 'MeanDiameter_px', 'MeanDiameter_um'}); 
-    vessel_measurements = vessel_measurements([vessel_measurements.Label]>1,:);
-    num_vessels = size(vessel_measurements, 1);
-    
-    % Average Vessel Branch Length in um
-    meanLength(ff) = mean([vessel_measurements.Length_um]);
-
-    % Average Vessel Diameter in um (including at branch points)
-    avg_diameter = mean(skeleton_diameters(skeleton));
-    meanDiameter(ff) = avg_diameter*img_reso(1);
-
-    % Average Vessel Density per mm2
-    img_reso_mm = img_reso*(10^-3);
-    img_area = prod(size(binary_img).*img_reso_mm);
-    meanDensity(ff) = num_vessels/img_area;
-
-    % Fractal Dimension
-    [n, r] = boxcount2D(skeleton);
-    fracDimension(ff) = -1*fit(log(r)', log(n)', 'poly1').p1;
-
-    % Print the quantification results
-    fprintf("    %d. %s:  Diameter: %.3f,  Length: %.3f,  Density: %.3f,  Fractal dimension: %.3f\n", ...
-        ff, filelist(ff).name, meanDiameter(ff), meanLength(ff), meanDensity(ff), fracDimension(ff));
+    [measurements, readErrorIdx] = plot.quant_morph(ff, parameters, imgInfo, readErrorIdx);
+    plot.log_morph_measurements(parameters, ff, measurements)
+    meanDiameter(ff) = measurements.meanDiameter;
+    meanLength(ff) = measurements.meanLength;
+    meanDensity(ff) = measurements.meanDensity;
+    fracDimension(ff) = measurements.fracDimension;
 
     % Save detailed results
     if save_detailed_results
