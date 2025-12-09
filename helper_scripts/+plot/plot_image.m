@@ -12,7 +12,7 @@ function h = plot_image(img, colored_by, units, save_path)
     axis off;
     colormap(cmap);
     cb = colorbar;
-    cb.Label.String = colored_by + " (" + string(units) + ")";
+    cb.Label.String = upper(extractBetween(colored_by,1,1)) + extractAfter(colored_by,1) + " (" + string(units) + ")";
     cb.Label.FontSize = 12;
     title(plot_title);
 
