@@ -7,6 +7,7 @@
 %%%% Authors:     Tricia Loo (DBI-Infra IACF, tricia.loo@sund.ku.dk)
 %%%%              Julia Mertesdorf (DBI-Infra IACF, jume@di.ku.dk)
 %%%%              Peidi Xu (DBI-Infra IACF, peidi.xu@sund.ku.dk)
+%%%%              Jesko Wagner (DBI-Infra IACF, jesko.wagner@sund.ku.dk)
 %%%%
 %%%% Description: This third section of the pipeline performs quantitative  
 %%%%              analysis on a series of cropped OCT images stored in the  
