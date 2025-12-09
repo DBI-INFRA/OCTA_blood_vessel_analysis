@@ -65,6 +65,7 @@ try
     fracDimension = zeros(num_images, 1);
     readErrorIdx  = cell(num_images, 2);
     [readErrorIdx{:, 1}] = deal(false);
+    morphTable = cell(num_images, 4);
 
     detailed_result_path = fullfile(result_dir, 'DetailedResults');
 
@@ -81,45 +82,42 @@ end
 % ================= Quantify all images in folder =========================
 fprintf("\nProcessing %d images:\n", num_images);
 for ff = 1:length(filelist)
-    [measurements, readErrorIdx] = plot.quant_morph(ff, parameters, imgInfo, readErrorIdx);
-    plot.log_morph_measurements(parameters, ff, measurements)
-    meanDiameter(ff) = measurements.meanDiameter;
-    meanLength(ff) = measurements.meanLength;
-    meanDensity(ff) = measurements.meanDensity;
-    fracDimension(ff) = measurements.fracDimension;
+    [morph, readErrorIdx] = plot.quant_morph(ff, parameters, imgInfo, readErrorIdx);
+    morphTable(ff, :) = plot.summarise_morph_measurements(parameters, ff, morph.avg, log_to_console=true);
 
     % Save detailed results
     if save_detailed_results
         [~, filename, ~] = fileparts(filelist(ff).name);
         save_path = fullfile(detailed_result_path, filename);
-        writetable(vessel_measurements, [save_path '_perBranchMeasurements.csv'])
+        writetable(morph.object, [save_path '_perBranchMeasurements.csv'])
 
         % Write Integer Output
-        imwrite(binary_img, [save_path '_vessels.tif'])
-        imwrite(skeleton, [save_path '_skeleton.tif'])
-        imwrite(uint16(labeled_skeleton), [save_path '_labeledSkeleton.tif'])
+        imwrite(~morph.image.binary, [save_path '_vessels.tif'], compression="none")
+        imwrite(~morph.image.skeleton, [save_path '_skeleton.tif'], compression="none")
+        imwrite(morph.image.labeled_skeleton, [save_path '_labeledSkeleton.tif'], compression="none")
 
         % Plot mapped measurements
         turbo_on_black = [0, 0, 0; turbo(255)];
 
-        imagesc(skeleton_diameters), axis image, axis off, 
+        imagesc(morph.image.skeleton_diameters), axis image, axis off, 
         colormap(turbo_on_black), colorbar
         title("Vessel skeleton color-mapped to vessel diameter")
         exportgraphics(gcf, [save_path '_vesselDiameter.png'], 'Resolution', 600);
 
-        skeleton_branchdiameter = labelmapper(labeled_skeleton, [vessel_measurements.Label], [vessel_measurements.MeanDiameter_um]);
+        skeleton_branchdiameter = labelmapper(morph.image.labeled_skeleton, [morph.object.Label], [morph.object.MeanDiameter_um]);
         imagesc(skeleton_branchdiameter), axis image, axis off, 
         colormap(turbo_on_black), colorbar
         title("Vessel skeleton color-mapped to mean branch diameter")
         exportgraphics(gcf, [save_path '_branchMeanDiameter.png'], 'Resolution', 600);
 
-        skeleton_branchlength = labelmapper(labeled_skeleton, [vessel_measurements.Label], [vessel_measurements.Length_um]);
+        skeleton_branchlength = labelmapper(morph.image.labeled_skeleton, [morph.object.Label], [morph.object.Length_um]);
         imagesc(skeleton_branchlength), axis image, axis off, 
         colormap(turbo_on_black), colorbar
         title("Vessel skeleton color-mapped to branch length")
         exportgraphics(gcf, [save_path '_branchLength.png'], 'Resolution', 600);
 
         close
+
     end
 
 end
@@ -154,7 +152,7 @@ param_table = [{"image_dir"}, {image_dir};
 writecell(param_table, fullfile(result_dir, "Parameters.csv"))
 
 % Morphology calculations
-morphTable = table(meanDiameter, meanLength, meanDensity, fracDimension);
+morphTable = cell2table(morphTable);
 morphTable.Properties.RowNames = {filelist.name};
 morphTable.Properties.VariableNames ...
     = {'Mean_Diameter (um)', 'Mean_Branch_Length (um)', ...

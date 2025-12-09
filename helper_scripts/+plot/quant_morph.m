@@ -1,9 +1,9 @@
-function [measurements, readErrorIdx] = quant_morph(ff, parameters, imgInfo, readErrorIdx)
+function [out, readErrorIdx] = quant_morph(ff, parameters, imgInfo, readErrorIdx)
 
 % 1) Parse image information
 img_path = fullfile(parameters.image_dir, parameters.filelist(ff).name);
 
-measurements = struct('meanDiameter', NaN, 'meanLength', NaN, 'meanDensity', NaN, 'fracDimension', NaN);
+avg_measurements = struct('meanDiameter', NaN, 'meanLength', NaN, 'meanDensity', NaN, 'fracDimension', NaN);
 
 % Check validity of frame at which to quantify
 if isscalar(parameters.quantify_frame)
@@ -56,28 +56,34 @@ skeleton_diameters = double(bwdist(~binary_img).*skeleton*2);
 % Make Vessel Measurements per Branch
 vessel_morph = regionprops(labeled_skeleton, skeleton_diameters, 'MeanIntensity', 'Area');
 vessel_label = regionprops(labeled_skeleton, labeled_skeleton, 'MeanIntensity');
-vessel_measurements = table([vessel_label.MeanIntensity]', ...
+per_vessel_measurements = table([vessel_label.MeanIntensity]', ...
                             [vessel_morph.Area]', [vessel_morph.Area]'*img_reso(1), ...
                             [vessel_morph.MeanIntensity]', [vessel_morph.MeanIntensity]' *img_reso(1), ...
                             'VariableNames', {'Label', 'Length_px', 'Length_um', 'MeanDiameter_px', 'MeanDiameter_um'}); 
-vessel_measurements = vessel_measurements([vessel_measurements.Label]>1,:);
-num_vessels = size(vessel_measurements, 1);
+per_vessel_measurements = per_vessel_measurements([per_vessel_measurements.Label]>1,:);
+num_vessels = size(per_vessel_measurements, 1);
 
 % Average Vessel Branch Length in um
-measurements.meanLength = mean([vessel_measurements.Length_um]);
+avg_measurements.meanLength = mean([per_vessel_measurements.Length_um]);
 
 % Average Vessel Diameter in um (including at branch points)
 avg_diameter = mean(skeleton_diameters(skeleton));
-measurements.meanDiameter = avg_diameter*img_reso(1);
+avg_measurements.meanDiameter = avg_diameter*img_reso(1);
 
 % Average Vessel Density per mm2
 img_reso_mm = img_reso*(10^-3);
 img_area = prod(size(binary_img).*img_reso_mm);
-measurements.meanDensity = num_vessels/img_area;
+avg_measurements.meanDensity = num_vessels/img_area;
 
 % Fractal Dimension
 [n, r] = boxcount2D(skeleton);
-measurements.fracDimension = -1*fit(log(r)', log(n)', 'poly1').p1;
+avg_measurements.fracDimension = -1*fit(log(r)', log(n)', 'poly1').p1;
 
-
-
+out = struct(); % Initialize the output struct
+out.avg = avg_measurements;
+out.object = per_vessel_measurements;
+out.image = struct();
+out.image.binary = binary_img;
+out.image.skeleton = skeleton;
+out.image.labeled_skeleton = uint16(labeled_skeleton);
+out.image.skeleton_diameters = skeleton_diameters;
