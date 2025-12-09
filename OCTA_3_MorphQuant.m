@@ -97,24 +97,19 @@ for ff = 1:length(filelist)
         imwrite(morph.image.labeled_skeleton, [save_path '_labeledSkeleton.tif'], compression="none")
 
         % Plot mapped measurements
-        turbo_on_black = [0, 0, 0; turbo(255)];
-
-        imagesc(morph.image.skeleton_diameters), axis image, axis off, 
-        colormap(turbo_on_black), colorbar
-        title("Vessel skeleton color-mapped to vessel diameter")
-        exportgraphics(gcf, [save_path '_vesselDiameter.png'], 'Resolution', 600);
+        plot.plot_image(morph.image.skeleton_diameters, ...
+            "vessel diameter", "µm", ...
+            [save_path '_vesselDiameter.png']);
 
         skeleton_branchdiameter = labelmapper(morph.image.labeled_skeleton, [morph.object.Label], [morph.object.MeanDiameter_um]);
-        imagesc(skeleton_branchdiameter), axis image, axis off, 
-        colormap(turbo_on_black), colorbar
-        title("Vessel skeleton color-mapped to mean branch diameter")
-        exportgraphics(gcf, [save_path '_branchMeanDiameter.png'], 'Resolution', 600);
+        plot.plot_image(skeleton_branchdiameter, ...
+            "mean branch diameter", "µm", ...
+            [save_path '_branchMeanDiameter.png']);
 
         skeleton_branchlength = labelmapper(morph.image.labeled_skeleton, [morph.object.Label], [morph.object.Length_um]);
-        imagesc(skeleton_branchlength), axis image, axis off, 
-        colormap(turbo_on_black), colorbar
-        title("Vessel skeleton color-mapped to branch length")
-        exportgraphics(gcf, [save_path '_branchLength.png'], 'Resolution', 600);
+        plot.plot_image(skeleton_branchlength, ...
+            "branch length", "µm", ...
+            [save_path '_branchLength.png']);
 
         close
 
