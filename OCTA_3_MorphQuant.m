@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% OCTA Workflow Pipeline 3: Quantification of Blood Vessel Morphology
 %%%%
-%%%% Version:     1.3
+%%%% Version:     1.4
 %%%% Date:        25/02/2024
 %%%%
 %%%% Authors:     Tricia Loo (DBI-Infra IACF, tricia.loo@sund.ku.dk)

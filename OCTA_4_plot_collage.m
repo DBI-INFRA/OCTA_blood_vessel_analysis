@@ -1,3 +1,19 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% OCTA Workflow Pipeline 4: Comparing Morphology Across Images
+%%%%
+%%%% Version:     1.0
+%%%% Date:        09/12/2025
+%%%%
+%%%% Authors:     Jesko Wagner (DBI-Infra IACF, jesko.wagner@sund.ku.dk)
+%%%%
+%%%% Description: This fourth section of the pipeline performs viusual  
+%%%%              comparison of measurements performed in the previous step.
+%%%%              Specifically, it allows plotting metrics measured on
+%%%%              separate images with a unified color bar, so they can be
+%%%%              compared qualitatively. The resulting figures may also be
+%%%%              exported for further use in publications.
+%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %% ================= Initialization =======================================
