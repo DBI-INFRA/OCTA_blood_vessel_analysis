@@ -67,6 +67,7 @@ try
     readErrorIdx  = cell(num_images, 2);
     [readErrorIdx{:, 1}] = deal(false);
     morphTable = cell(num_images, 4);
+    fullMorphResults = struct('name', {}, 'avg', {}, 'object', {}, 'image', {});
 
     detailed_result_path = fullfile(result_dir, 'DetailedResults');
 
@@ -84,6 +85,10 @@ end
 fprintf("\nProcessing %d images:\n", num_images);
 for ff = 1:length(filelist)
     [morph, readErrorIdx] = plot.quant_morph(ff, parameters, imgInfo, readErrorIdx);
+    fullMorphResults(ff).name = parameters.filelist(ff).name;
+    fullMorphResults(ff).avg = morph.avg;
+    fullMorphResults(ff).object = morph.object;
+    fullMorphResults(ff).image = morph.image;
     morphTable(ff, :) = plot.summarise_morph_measurements(parameters, ff, morph.avg, log_to_console=true);
 
     % Save detailed results
@@ -155,4 +160,7 @@ morphTable.Properties.VariableNames ...
        'Vessel_Density (vessel/mm2)', 'Fractal_Dimension'};
 writetable(morphTable, fullfile(result_dir, 'MorphologyResults.csv'), WriteRowNames=true);
 fprintf("\n"); disp(morphTable);
+
+save(fullfile(result_dir, 'MorphologyResults_full.mat'), 'fullMorphResults');
+
 fprintf("\nOCTA Script 3: Quantification of Blood Vessel Morphology is DONE\n");
