@@ -64,7 +64,7 @@ catch ME
     rethrow(ME);
 end
 
-% Create folder for processed imagr
+% Create folder for processed image
 mkdir(processed_image_dir);
 
 %% ================= Preprocess all images in input folder ================
