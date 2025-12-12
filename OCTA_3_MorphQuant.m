@@ -98,9 +98,9 @@ for ff = 1:length(filelist)
         writetable(morph.object, [save_path '_perBranchMeasurements.csv'])
 
         % Write Integer Output
-        imwrite(~morph.image.binary, [save_path '_vessels.tif'], compression="none")
-        imwrite(~morph.image.skeleton, [save_path '_skeleton.tif'], compression="none")
-        imwrite(morph.image.labeled_skeleton, [save_path '_labeledSkeleton.tif'], compression="none")
+        imwrite(uint16(morph.image.binary), [save_path '_vessels.tif'])
+        imwrite(uint16(morph.image.skeleton), [save_path '_skeleton.tif'])
+        imwrite(uint16(morph.image.labeled_skeleton), [save_path '_labeledSkeleton.tif'])
 
         % Plot mapped measurements
         plot.plot_image(morph.image.skeleton_diameters, ...
