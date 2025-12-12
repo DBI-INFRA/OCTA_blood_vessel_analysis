@@ -1,7 +1,12 @@
 function [out, readErrorIdx] = quant_morph(ff, parameters, imgInfo, readErrorIdx)
 
 % 1) Parse image information
-img_path = fullfile(parameters.image_dir, parameters.filelist(ff).name);
+image_dir = parameters.image_dir;
+if exist(fullfile(parameters.output_dir, 'ProcessedImages'), 'dir')
+    image_dir = fullfile(parameters.output_dir, 'ProcessedImages');
+end
+
+img_path = fullfile(image_dir, parameters.filelist(ff).name);
 
 avg_measurements = struct('meanDiameter', NaN, 'meanLength', NaN, 'meanDensity', NaN, 'fracDimension', NaN);
 

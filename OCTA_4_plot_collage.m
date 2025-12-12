@@ -71,7 +71,7 @@ data = plot.get_struct_by_name(fullMorphResults, files);
 % skeleton_diameters = vessel skeleton colored by diameter
 % labeled_skeleton = vessel skeleton labeled by which vessel branch it belongs to
 
-options = ["Plot" "Vessel diameter" ...
+options = ["Vessel diameter" ...
            "Mean branch diameter" "Branch length"];
 
            % decide which metric to plot
