@@ -54,6 +54,9 @@ try
     imgInfo = readtable(fullfile(result_dir, 'ImageSummary.csv'), 'ReadRowNames', true, 'Delimiter', ',');
     if exist(fullfile(result_dir, 'ProcessedImages'), 'dir')
         image_dir = fullfile(result_dir, 'ProcessedImages');
+    else
+        warning_msg = {"CLD/SPD estimation on raw images, not processed ones.","Ensure this is intended."};
+        writecell(warning_msg, fullfile(result_dir, 'WarningLog.txt'), 'WriteMode','append')
     end
     
     % Default (optimised) thresholding parameters for CLD- & SPD- detection

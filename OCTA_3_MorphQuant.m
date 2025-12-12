@@ -54,7 +54,7 @@ try
         image_dir = fullfile(result_dir, 'ProcessedImages');
     else
         warning_msg = {"Morphological quantification on raw images, not processed ones.","Ensure this is intended."};
-        writecell(warning_msg, fullfile(result_dir, 'WarningLog.txt'))
+        writecell(warning_msg, fullfile(result_dir, 'WarningLog.txt'), 'WriteMode','append')
     end
 
     % Calculate image sizes
@@ -133,7 +133,7 @@ if any(warningIdx)
     warningHead = {"The following files had errors in their SPD detection", "Frames read as SPD (NaN or start_frame, stop_frame, depth(um))"};
     warningBody = [{filelist(warningIdx).name}', readErrorIdx(warningIdx, 2)];
     warningLog  = [warningHead; warningBody];
-    writecell(warningLog, fullfile(result_dir, 'WarningLog.txt'))
+    writecell(warningLog, fullfile(result_dir, 'WarningLog.txt'), 'WriteMode','append')
 end
 
 % Write final parameters to table
