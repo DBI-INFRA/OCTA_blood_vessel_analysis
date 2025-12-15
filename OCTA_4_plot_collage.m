@@ -6,7 +6,7 @@
 %%%%
 %%%% Authors:     Jesko Wagner (DBI-Infra IACF, jesko.wagner@sund.ku.dk)
 %%%%
-%%%% Description: This fourth section of the pipeline performs viusual  
+%%%% Description: This fourth section of the pipeline performs visual
 %%%%              comparison of measurements performed in the previous step.
 %%%%              Specifically, it allows plotting metrics measured on
 %%%%              separate images with a unified color bar, so they can be
@@ -58,7 +58,7 @@ end
 
 if isequal(files, 0)
     error('No file was selected. Exiting.');
-elseif isa(files, 'char') 
+elseif isa(files, 'char')
     files = cell({files}); % single image has been passed
 end
 
