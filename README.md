@@ -5,6 +5,7 @@ Multi-component pipeline for automated analysis of blood vessel morphology image
 - Curve Fitting Toolbox
 - Deep Learning Toolbox
 - Fuzzy Logic Toolbox
+- Image Processing Toolbox
 - Signal Processing Toolbox
 - Wavelet Toolbox
 
