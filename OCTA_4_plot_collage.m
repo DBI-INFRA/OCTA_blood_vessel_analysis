@@ -102,5 +102,6 @@ colormap(cmap);
 cb = colorbar;
 cb.Label.String = options(chosen_metric) + " (µm)";
 cb.Label.FontSize = 12;
+
 % export image to a directory
-plot.save_figure(gcf, parameters)
+plot.save_figure(gcf, parameters);

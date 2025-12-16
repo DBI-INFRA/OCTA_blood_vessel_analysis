@@ -29,7 +29,15 @@ function save_figure(figH, parameters)
     end
 
     fullfileName = fullfile(pth, fname);
-
+    % Remove axis toolbars before exporting
+    axs = findall(figH, 'type', 'axes');
+    for k = 1:numel(axs)
+        tb = axtoolbar(axs(k));
+        if isvalid(tb)
+            tb.Visible = 'off';
+        end
+    end
+    
     % 3) Save using your preferred method
     [~,~,ext] = fileparts(fname);
     try
