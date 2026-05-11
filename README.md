@@ -11,8 +11,8 @@ Multi-component pipeline for automated analysis of blood vessel morphology image
 
 ## Usage and code structures
 
-This package consists of a "config.m" file, and three "OCTA_... .m" scripts in a main folder, and a subfolder "helper_scripts" which includes MATLAB functions that are called by the three main scripts. 
-The "config.m" file should be run before any of the main scripts are run. The three main scripts are expected to be run in order for analysis of blood vessel morphology at the Superficial Plexus Depth (SPD), but can be operated independently.
+This package consists of a "config.m" file, and four "OCTA_... .m" scripts in a main folder, and a subfolder "helper_scripts" which includes MATLAB functions that are called by the main scripts. 
+The "config.m" file should be run before any of the main scripts are run. The first three main scripts are expected to be run in order for analysis of blood vessel morphology at the Superficial Plexus Depth (SPD), but can be operated independently.
 
 - **Expected Input**: An entire folder of OCTA images. We provide an additional folder of pre-cropped sample images in the folder `sample_data` as an example of expected input. Please keep `AutoCrop` set to `false` for these test images, since they have already been cropped for size.
 - **Expected Output**: Each time "config.m" is run, a subfolder with the current date-time in the form of `yyMMdd_HHmmss` (e.g., "240722_154054") will be created in a chosen result folder "result_dir" along with three files "ImageSummary.csv", "Parameters.m". The pipeline will save all intermediate and final outputs into the subfolder and will also expect to receive intermediate data from the subfolder.
@@ -86,7 +86,7 @@ The first part of the OCTA analysis pipeline performs image preprocessing. For e
 ___
 ### OCTA_2_CLD_SPD_estimation.m
 The second part of the pipeline estimates the Capillary Loop Depth (CLD) and Superficial Plexus Depth (SPD) by performing blood vessel segmentation and skeletonisation for each z-slice in the image, and counting the number of independent skeletons (i.e., the number of unconnected blood vessel networks) through the depth of the 3D-image. The CLD is identified at the depth slice position with the maximum number of unconnected blood vessel networks, and the SPD at the depth slice position where the gradient of the curve of independent vessel networks reaches 0 for the first time after the detected CLD-depth.
-The script will preferentially use preprocessed images from "`results_dir`/`yyMMdd_HHmmss`/ProcessedImages/", if it exists, or else will default to images in `input_dir`
+The script will preferentially use preprocessed images from "`results_dir`/`yyMMdd_HHmmss`/ProcessedImages/", if it exists, or else will default to images in `input_dir`. Note that using processed images (as opposed to raw images) affects quantification results in OCTA_3, as the skeleton is computed on a less noisy image. For images where autocrop does not perform well, users may wish to set `AutoCrop` to `false` in config.m and instead specify the CLD/SPD depths manually in "ImageSummary.csv".
 
 #### User Input Parameters
 <u>Required:</u>
@@ -117,5 +117,20 @@ The depth can be specified as a specific frame or as a Variable_Name in 'ImageSu
 #### Expected Outputs (stored in "`results_dir`/`yyMMdd_HHmmss/`")
 - **"DetailedResults/"**: Folder of detailed results output, including the binarized vessels, vessel skeletons, labeled skeleton segments, .csv file of morphological measurements for each branch as well as graphs displaying morphological measurements per branch.
 - **"MorphologyResults.csv"**: A table showing the summarised morphology results of the skeletonized blood vessel network at the SPD-depth of each image, including mean diameter, length, vessel density, fractal dimension. The mean vessel diameter is calculated on the full vessel segmentation which includes branch points.
+- **"MorphologyResults.mat"**: All measurements from this run stored as a MATLAB `.mat` file. This file is used as input by OCTA_4 to generate cross-image comparison plots.
 - **"Parameters.csv"**: All user input variables saved in "Parameters.mat" are written out into a .csv file for ease of reading.
 - **"WarningLog.txt"**: Text file to log all images where the full SPD range (`[SPD_depth-round(SPD_range_um/pixel_size(3)), SPD_depth+round(SPD_range_um/pixel_size(3))]`) cannot be read in, either because the SPD was not found (SPD_frame = "NaN") or because the specified SPD range goes beyond the slices available in the corresponding "1_AlignedImage/" file. In these cases, the user may choose to manually specify an SPD (see expected outputs for "OCTA_2_CLD_SPD_estimation.m") or re-crop the images with "OCTA_1_Preprocessing" with a lower `CropSensitivity` setting, for these specific images with errors.
+___
+### OCTA_4_plot_collage.m
+The fourth script is an optional comparison module that visualises morphological metrics measured in OCTA_3 side-by-side across multiple images. It reads the "MorphologyResults.mat" files produced by OCTA_3 and generates a multi-panel comparison figure. The script is driven entirely by GUI prompts and does not require config.m to be run first.
+
+Upon launching the script, three sequential dialogs will appear:
+1. **Image selection**: A file picker prompts you to select the images you wish to compare. These are used for their file names only; the corresponding OCTA_3 results are loaded automatically.
+2. **Metric selection**: A dialog asks which metric to compare - vessel diameter (per pixel), mean branch diameter (vessel diameter averaged across a branch), or branch length. Click the desired metric.
+3. **Export path** *(optional)*: A save dialog prompts for an output file name and format (e.g. PDF). Click "Cancel" to skip saving and view the figure on screen only.
+
+The script then generates a comparison plot for the selected metric across all chosen images. To compare a different metric, simply rerun the script and select the desired metric in step 2.
+
+#### Expected Outputs
+- **Figure**: An on-screen multi-panel comparison plot of the selected morphological metric across the chosen images.
+- **Exported figure** *(optional)*: The comparison plot saved to the chosen file path in the chosen format (e.g. PDF). Can be opened with appropriate software such as Acrobat Reader.
