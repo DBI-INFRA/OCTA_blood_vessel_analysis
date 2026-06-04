@@ -1,8 +1,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% OCTA Workflow Pipeline 4: Comparing Morphology Across Images
 %%%%
-%%%% Version:     1.0
-%%%% Date:        09/12/2025
+%%%% Version:     1.1
+%%%% Date:        04/06/2026
 %%%%
 %%%% Authors:     Jesko Wagner (DBI-Infra IACF, jesko.wagner@sund.ku.dk)
 %%%%
@@ -13,6 +13,11 @@
 %%%%              compared qualitatively. The resulting figures may also be
 %%%%              exported for further use in publications.
 %%%%
+%%%%              Comparison works across independent runs: the user selects
+%%%%              one or more 'MorphologyResults_full.mat' files (possibly
+%%%%              from different result folders), their measurements are
+%%%%              combined, and the user then picks which images to compare.
+%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -21,49 +26,74 @@ close all
 clear all
 addpath('helper_scripts');
 
-%%% Specify result_dir (path where the desired 'Parameters.mat' is stored)
-result_dir = 'results\yymmdd_hhmmss\';
-
-%%% Load exisiting user configurations
-parameters = load(fullfile(result_dir, 'Parameters.mat'));
-
-%% ================ Parse Inputs and Allocate Storage =====================
-% Update modified variables
-existingVars = fieldnames(parameters);
-for i = 1:numel(existingVars)
-    eval([existingVars{i} ' = parameters.' existingVars{i} ';']);
-end
-save(fullfile(result_dir, 'Parameters.mat'), existingVars{:});
-
-
-try
-    % Load image information and find any pre-processed image
-    imgInfo = readtable(fullfile(result_dir, 'ImageSummary.csv'), 'ReadRowNames', true, 'Delimiter', ',');
-    if exist(fullfile(result_dir, 'ProcessedImages'), 'dir')
-        image_dir = fullfile(result_dir, 'ProcessedImages');
+%% ================= Select MorphologyResults_full.mat files ==============
+% Let the user pick .mat files, one folder at a time, so that results from
+% independent runs (which live in different result folders) can be combined.
+% uigetfile returns files from a single folder per call, so we loop and keep
+% accumulating until the user cancels.
+matlist   = {};             % full paths to all selected .mat files
+startPath = 'results';      % folder the next dialog opens in
+while true
+    [f, p] = uigetfile({'*.mat', 'Morphology results (*.mat)'}, ...
+        'Select MorphologyResults_full.mat file(s) - Cancel when done', ...
+        startPath, 'MultiSelect', 'on');
+    if isequal(f, 0)
+        break;              % user is done selecting
     end
-
-    % Contains fullMorphResults
-    load(fullfile(result_dir, 'MorphologyResults_full.mat'));
-
-catch ME
-    fprintf("Check configuration file: ")
-    rethrow(ME);
+    if ischar(f)
+        f = {f};            % single file selected
+    end
+    matlist   = [matlist, fullfile(p, f)];
+    startPath = p;          % reopen next dialog in the same folder
 end
 
-% File order depends on the OS
-[files, path] = uigetfile({'*.tif;*.tiff', 'TIFF Files (*.tif, *.tiff)'}, ...
-    'Select TIFF files', result_dir, 'MultiSelect', 'on');
-
-
-if isequal(files, 0)
-    error('No file was selected. Exiting.');
-elseif isa(files, 'char')
-    files = cell({files}); % single image has been passed
+if isempty(matlist)
+    error('No .mat files were selected. Exiting.');
 end
 
-% Subset morphology results by selected files
-data = plot.get_struct_by_name(fullMorphResults, files);
+%% ================= Combine results across selected files ================
+% Read each .mat file and concatenate its fullMorphResults struct array. A
+% 'source' field (the parent result folder name) is added to each entry so
+% that images with identical filenames from different runs stay
+% distinguishable in the selection dialog below.
+allResults = [];
+for m = 1:numel(matlist)
+    loaded = load(matlist{m});
+    if ~isfield(loaded, 'fullMorphResults') || isempty(loaded.fullMorphResults)
+        warning('Skipping "%s": no fullMorphResults found.', matlist{m});
+        continue;
+    end
+    these = loaded.fullMorphResults;
+    [~, runName] = fileparts(fileparts(matlist{m}));   % result folder name
+    [these.source] = deal(runName);
+
+    if isempty(allResults)
+        allResults = these;
+    else
+        these = orderfields(these, allResults);        % match field order
+        allResults = [allResults, these];
+    end
+end
+
+if isempty(allResults)
+    error('None of the selected .mat files contained usable results. Exiting.');
+end
+
+%% ================= Select which images to compare =======================
+% Present every image found across the selected files and let the user pick
+% which ones to compare. Selection is by index, so duplicate filenames from
+% different runs are handled unambiguously.
+labels = arrayfun(@(s) sprintf('%s  |  %s', s.source, s.name), ...
+    allResults, 'UniformOutput', false);
+[sel, ok] = listdlg( ...
+    'PromptString',   {'Select images to compare', '(Ctrl/Shift-click for multiple)'}, ...
+    'ListString',     labels, ...
+    'SelectionMode',  'multiple', ...
+    'ListSize',       [450 300]);
+if ~ok || isempty(sel)
+    error('No images were selected. Exiting.');
+end
+data = allResults(sel);
 
 % data.image options:
 % binary = binary vessel segmentation
@@ -74,17 +104,24 @@ data = plot.get_struct_by_name(fullMorphResults, files);
 options = ["Vessel diameter" ...
            "Mean branch diameter" "Branch length"];
 
-           % decide which metric to plot
-chosen_metric = menu('Select what to plot', options);
+% decide which metric to plot (listdlg centres on screen, unlike menu)
+[chosen_metric, ok] = listdlg( ...
+    'PromptString',  'Select what to plot', ...
+    'ListString',    cellstr(options), ...
+    'SelectionMode', 'single', ...
+    'ListSize',      [220 90]);
+if ~ok || isempty(chosen_metric)
+    error('No metric was selected. Exiting.');
+end
 
 % prepare canvas to right dimensions
-canvas = plot.prepare_canvas(length(files));
+canvas = plot.prepare_canvas(numel(data));
 
 % plot each image with correct metric overlay
-for k = 1:length(files)
+for k = 1:numel(data)
     % activate axis
     axes(canvas(k));
-    [~, plot_title] = fileparts(files(k));
+    [~, plot_title] = fileparts(data(k).name);
     plot_data = data(k);
     if chosen_metric == 1
         plot_data = data(k).image.skeleton_diameters;
@@ -100,8 +137,10 @@ cmap = [0, 0, 0; turbo(255)];
 colormap(cmap);
 
 cb = colorbar;
+cb.Layout.Tile = 'east';   % span the right of the whole layout, not just the last panel
 cb.Label.String = options(chosen_metric) + " (µm)";
 cb.Label.FontSize = 12;
 
-% export image to a directory
+% export image to a directory (defaults to the first selected file's folder)
+parameters.output_dir = fileparts(matlist{1});
 plot.save_figure(gcf, parameters);

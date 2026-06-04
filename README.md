@@ -116,21 +116,22 @@ The depth can be specified as a specific frame or as a Variable_Name in 'ImageSu
 
 #### Expected Outputs (stored in "`results_dir`/`yyMMdd_HHmmss/`")
 - **"DetailedResults/"**: Folder of detailed results output, including the binarized vessels, vessel skeletons, labeled skeleton segments, .csv file of morphological measurements for each branch as well as graphs displaying morphological measurements per branch.
-- **"MorphologyResults.csv"**: A table showing the summarised morphology results of the skeletonized blood vessel network at the SPD-depth of each image, including mean diameter, length, vessel density, fractal dimension. The mean vessel diameter is calculated on the full vessel segmentation which includes branch points.
-- **"MorphologyResults.mat"**: All measurements from this run stored as a MATLAB `.mat` file. This file is used as input by OCTA_4 to generate cross-image comparison plots.
+- **"MorphologyResults.xlsx"**: A table showing the summarised morphology results of the skeletonized blood vessel network at the SPD-depth of each image, including mean diameter, length, vessel density, fractal dimension. The mean vessel diameter is calculated on the full vessel segmentation which includes branch points.
+- **"MorphologyResults_full.mat"**: All measurements from this run stored as a MATLAB `.mat` file. This file is used as input by OCTA_4 to generate cross-image comparison plots.
 - **"Parameters.csv"**: All user input variables saved in "Parameters.mat" are written out into a .csv file for ease of reading.
 - **"WarningLog.txt"**: Text file to log all images where the full SPD range (`[SPD_depth-round(SPD_range_um/pixel_size(3)), SPD_depth+round(SPD_range_um/pixel_size(3))]`) cannot be read in, either because the SPD was not found (SPD_frame = "NaN") or because the specified SPD range goes beyond the slices available in the corresponding "1_AlignedImage/" file. In these cases, the user may choose to manually specify an SPD (see expected outputs for "OCTA_2_CLD_SPD_estimation.m") or re-crop the images with "OCTA_1_Preprocessing" with a lower `CropSensitivity` setting, for these specific images with errors.
 ___
 ### OCTA_4_plot_collage.m
-The fourth script is an optional comparison module that visualises morphological metrics measured in OCTA_3 side-by-side across multiple images. It reads the "MorphologyResults.mat" files produced by OCTA_3 and generates a multi-panel comparison figure. The script is driven entirely by GUI prompts and does not require config.m to be run first.
+The fourth script is an optional comparison module that visualises morphological metrics measured in OCTA_3 side-by-side across multiple images. It reads one or more "MorphologyResults_full.mat" files produced by OCTA_3 and generates a multi-panel comparison figure. Because it loads the result files directly, images from **independent runs** (different result folders) can be compared in a single figure. The script is driven entirely by GUI prompts and does not require config.m to be run first.
 
-Upon launching the script, three sequential dialogs will appear:
-1. **Image selection**: A file picker prompts you to select the images you wish to compare. These are used for their file names only; the corresponding OCTA_3 results are loaded automatically.
-2. **Metric selection**: A dialog asks which metric to compare - vessel diameter (per pixel), mean branch diameter (vessel diameter averaged across a branch), or branch length. Click the desired metric.
-3. **Export path** *(optional)*: A save dialog prompts for an output file name and format (e.g. PDF). Click "Cancel" to skip saving and view the figure on screen only.
+Upon launching the script, the following dialogs will appear:
+1. **Result file selection**: A file picker prompts you to select "MorphologyResults_full.mat" file(s). Since each call selects from one folder, the dialog reopens after each selection so you can add files from other result folders; click "Cancel" once you have selected all the files you need. The measurements from every selected file are combined.
+2. **Image selection**: A list dialog shows every image found across the selected files (each labelled with its source result folder so identically named images stay distinguishable). Ctrl/Shift-click to choose which images to compare.
+3. **Metric selection**: A centred list dialog asks which metric to compare - vessel diameter (per pixel), mean branch diameter (vessel diameter averaged across a branch), or branch length. Select the desired metric.
+4. **Export path** *(optional)*: A save dialog prompts for an output file name and format (e.g. PDF), defaulting to the folder of the first selected result file. Click "Cancel" to skip saving and view the figure on screen only.
 
-The script then generates a comparison plot for the selected metric across all chosen images. To compare a different metric, simply rerun the script and select the desired metric in step 2.
+The script then generates a comparison plot for the selected metric across all chosen images. To compare a different metric, simply rerun the script and select the desired metric in step 3.
 
 #### Expected Outputs
-- **Figure**: An on-screen multi-panel comparison plot of the selected morphological metric across the chosen images.
+- **Figure**: An on-screen multi-panel comparison plot of the selected morphological metric across the chosen images. All panels share a single colour scale, shown as one colour bar spanning the right-hand side of the whole figure.
 - **Exported figure** *(optional)*: The comparison plot saved to the chosen file path in the chosen format (e.g. PDF). Can be opened with appropriate software such as Acrobat Reader.

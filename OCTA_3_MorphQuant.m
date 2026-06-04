@@ -161,7 +161,10 @@ morphTable.Properties.RowNames = {filelist.name};
 morphTable.Properties.VariableNames ...
     = {'Mean_Diameter (um)', 'Mean_Branch_Length (um)', ...
        'Vessel_Density (vessel/mm2)', 'Fractal_Dimension'};
-writetable(morphTable, fullfile(result_dir, 'MorphologyResults.csv'), WriteRowNames=true);
+% Write as .xlsx (not .csv) so numbers are stored as native numeric cells.
+% Excel then renders the decimal separator per the user's locale, and the
+% data lands in separate columns regardless of the locale's list separator.
+writetable(morphTable, fullfile(result_dir, 'MorphologyResults.xlsx'), WriteRowNames=true);
 fprintf("\n"); disp(morphTable);
 
 save(fullfile(result_dir, 'MorphologyResults_full.mat'), 'fullMorphResults');
